@@ -48,3 +48,16 @@ Hourly Parquet exports: https://deadlock-api.com/data-dumps
 
 - Which files hold the bulk of recent ranked matches
 
+
+## Findings from the API docs
+- Lookup lists: /v1/assets/heroes, /v1/assets/items, /v1/assets/ranks on api.deadlock-api.com
+- Badge = tier (first digits) + subtier (last digit), max 116
+- Ranks exist only from the first ranked season (2026-07-30)
+- Analytics endpoints are rate-limited (200 req/min per IP); fine for cached lookups
+- Corrupted items (build 6712+, from 2026-09-29) share the normal item's id: must detect and exclude
+- Filter to game_mode normal (exclude street_brawl)
+- Raw item win rates are confounded by wealth (ahead players buy sooner): known limitation for the MVP
+
+## Findings from the first Java load
+- Daily residual files contain few ranked matches (~100 in a 37.6K-row file)
+- Not all ranked rows have average_badge (70% in one file): skip null badges in rank-split stats
