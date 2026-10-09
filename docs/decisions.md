@@ -1,8 +1,8 @@
-\# Decisions
+# Decisions
 
 
 
-\## 1. Use the data lake, not the REST API, for bulk stats
+## 1. Use the data lake, not the REST API, for bulk stats
 
 The REST API is rate-limited; the data lake gives bulk Parquet files with no credentials.
 
