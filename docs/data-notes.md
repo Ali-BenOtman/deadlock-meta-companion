@@ -61,3 +61,11 @@ Hourly Parquet exports: https://deadlock-api.com/data-dumps
 ## Findings from the first Java load
 - Daily residual files contain few ranked matches (~100 in a 37.6K-row file)
 - Not all ranked rows have average_badge (70% in one file): skip null badges in rank-split stats
+
+## Assets (lookup lists)
+- Loaded at startup from /v1/assets/heroes, /items, /ranks and kept in memory
+- Item types: ability (418), upgrade (250), weapon (89). Shop items = type "upgrade"
+- Item ids exceed int range: store as long
+- Hero list (65) includes non-playable heroes: filter on player_selectable and disabled
+- Rank name = ranks[badge / 10] + " " + (badge % 10), e.g. 13 = Initiate 3
+- If the assets API is down at startup, the app still starts; names show as "Unknown ..."
