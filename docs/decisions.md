@@ -8,3 +8,20 @@ The REST API is rate-limited; the data lake gives bulk Parquet files with no cre
 
 We read only needed files and columns, so the 486 GB table is never downloaded in full.
 
+## 2. Plain SQL with JdbcTemplate instead of JPA
+Ingestion inserts thousands of rows at once and the stats are aggregate SQL queries.
+Writing the SQL directly is faster for bulk loads and keeps full control over the queries.
+
+## 3. Schema managed by Flyway migrations
+Tables are created by versioned SQL files (V1, V2, ...) applied automatically at startup.
+Schema changes are never made by hand, so every environment ends up identical.
+
+## 4. Duplicates prevented by primary keys
+matches: match_id. match_players: (match_id, account_id).
+The source data can contain the same row twice; the database itself rejects the second copy.
+
+## 5. account_id stored only as part of the key
+It is a Steam account number (personal data). It is used to prevent duplicates and is never shown on the website.
+
+## 6. Database password kept in infra/.env
+Read by both Docker Compose and Spring Boot, never committed. infra/.env.example documents the required setting.
