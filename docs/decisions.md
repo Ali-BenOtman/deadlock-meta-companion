@@ -32,3 +32,15 @@ Re-running the job inserts nothing new, and a failure halfway rolls everything b
 
 ## 8. Duplicate source rows resolved in DuckDB
 A window function (ROW_NUMBER over match_id, account_id ordered by created_at DESC) keeps only the newest copy of each player row before anything reaches PostgreSQL.
+
+## 9. One transaction per file
+DirectoryIngestionService calls IngestionService.ingestFile for each file. Because the call crosses classes,
+Spring's @Transactional applies per file: a failing file rolls back alone, earlier files stay saved.
+(Calling ingestFile from inside IngestionService itself would bypass the transaction proxy.)
+
+## 10. Incomplete matches are stored but excluded from stats
+Ingestion keeps the source data as-is. Stats queries only use matches with all 12 players.
+
+## Future improvement: remote extraction
+Instead of downloading whole files, DuckDB could read only ranked rows and needed columns directly from the
+data lake URLs. Better for automatic daily updates; not needed for the MVP.
