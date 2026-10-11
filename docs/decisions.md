@@ -25,3 +25,10 @@ It is a Steam account number (personal data). It is used to prevent duplicates a
 
 ## 6. Database password kept in infra/.env
 Read by both Docker Compose and Spring Boot, never committed. infra/.env.example documents the required setting.
+
+## 7. Idempotent ingestion
+Inserts use ON CONFLICT DO NOTHING on each table's primary key, inside one transaction.
+Re-running the job inserts nothing new, and a failure halfway rolls everything back.
+
+## 8. Duplicate source rows resolved in DuckDB
+A window function (ROW_NUMBER over match_id, account_id ordered by created_at DESC) keeps only the newest copy of each player row before anything reaches PostgreSQL.

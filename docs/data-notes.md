@@ -69,3 +69,10 @@ Hourly Parquet exports: https://deadlock-api.com/data-dumps
 - Hero list (65) includes non-playable heroes: filter on player_selectable and disabled
 - Rank name = ranks[badge / 10] + " " + (badge % 10), e.g. 13 = Initiate 3
 - If the assets API is down at startup, the app still starts; names show as "Unknown ..."
+
+## Ingestion findings
+- game_mode values: Normal, StreetBrawl (case-sensitive)
+- account_id = 0 only appears for bots (CoopBot matches); filtered out with account_id <> 0
+- Ability upgrades can repeat with identical (item, time): filtered by isShopItem, and ON CONFLICT DO NOTHING guards the primary key
+- First sample load: 100 matches, 1,200 players, 21,122 shop item purchases; second run inserted 0 (idempotent)
+- Data-quality check: every ingested match has exactly 12 players
