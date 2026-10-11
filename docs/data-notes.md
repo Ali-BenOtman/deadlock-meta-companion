@@ -76,3 +76,10 @@ Hourly Parquet exports: https://deadlock-api.com/data-dumps
 - Ability upgrades can repeat with identical (item, time): filtered by isShopItem, and ON CONFLICT DO NOTHING guards the primary key
 - First sample load: 100 matches, 1,200 players, 21,122 shop item purchases; second run inserted 0 (idempotent)
 - Data-quality check: every ingested match has exactly 12 players
+
+## Folder ingestion
+- Base file part-114 (newest base partition, ~11 hours of matches): 341K rows, 519 MB, ~25% ranked; all ranked rows have average_badge
+- Loaded totals after two files: 6,570 ranked matches, 78,787 players, ~1.32M shop item purchases
+- Re-processing an already-loaded file inserts 0 rows (idempotent across files)
+- 53 matches (~0.8%) have 11 players instead of 12: missing in the source data, not filtered by us
+- Base files are rebuilt as new matches arrive, so file names change over time
