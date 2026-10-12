@@ -70,3 +70,12 @@ Each player's first six distinct shop items (by first purchase time, item id as 
 by sorting the array. These are mostly early laning items, so the feature is labelled "starting build".
 Full end-game inventories almost never repeat exactly, so they cannot be counted reliably.
 Builds need 30+ games; the 10 most popular are returned, with win rate delta versus the hero's baseline.
+
+## 16. Smoothed win rates and tiers
+smoothed = (wins + 200 x 50%) / (games + 200). The prior is exactly 50% because every match has 6 winners and 6 losers.
+Tiers by smoothed distance from 50%: S >= +3, A +1 to +3, B between -1 and +1, C -1 to -3, D <= -3.
+Heroes under 500 games get NOT_ENOUGH_DATA and are listed after all tiered heroes.
+The calculation lives in MetaCalculator (no database, no Spring) and is covered by unit tests.
+
+## Known limitation: sample size in high-rank brackets
+At tier 8+, 17 of 41 heroes have under 500 games with the current data. Loading more days of matches fixes this.
