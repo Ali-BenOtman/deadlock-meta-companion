@@ -51,3 +51,16 @@ Values outside 0-11 are rejected with 400 Bad Request.
 
 ## 12. Rank stats only use matches with a known rank
 Hero stats require average_badge (matches without one are excluded) and all 12 players present.
+
+## 13. Item stats count each player once per item
+A player can buy, sell and rebuy the same item. Purchases are grouped per player and item (keeping the first buy time)
+so nobody's win or loss is counted twice.
+
+## 14. Items ranked by win rate delta, not raw win rate
+Delta = item win rate minus the hero's own win rate. A raw 57% means little on a hero who already wins 56%.
+Items need at least 100 buyers. Buy time is the median, which is robust to outliers.
+
+## Known limitation: item win rates are correlational
+Late items look strong because players who reach them are already ahead (wealth effect).
+Defensive and reactive items look weak because players often buy them when losing.
+Corrupted items (Broker, since 2026-09-29) share their normal item id and are not yet separated.
