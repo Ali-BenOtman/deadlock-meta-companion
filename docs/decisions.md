@@ -44,3 +44,10 @@ Ingestion keeps the source data as-is. Stats queries only use matches with all 1
 ## Future improvement: remote extraction
 Instead of downloading whole files, DuckDB could read only ranked rows and needed columns directly from the
 data lake URLs. Better for automatic daily updates; not needed for the MVP.
+
+## 11. Stats queries use bound parameters
+User input (minTier) is passed as a ? parameter to JdbcTemplate, never inserted into the SQL text, to prevent SQL injection.
+Values outside 0-11 are rejected with 400 Bad Request.
+
+## 12. Rank stats only use matches with a known rank
+Hero stats require average_badge (matches without one are excluded) and all 12 players present.
