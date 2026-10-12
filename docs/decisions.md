@@ -64,3 +64,9 @@ Items need at least 100 buyers. Buy time is the median, which is robust to outli
 Late items look strong because players who reach them are already ahead (wealth effect).
 Defensive and reactive items look weak because players often buy them when losing.
 Corrupted items (Broker, since 2026-09-29) share their normal item id and are not yet separated.
+
+## 15. Builds are starting builds: the first six shop items
+Each player's first six distinct shop items (by first purchase time, item id as tie-breaker), order ignored
+by sorting the array. These are mostly early laning items, so the feature is labelled "starting build".
+Full end-game inventories almost never repeat exactly, so they cannot be counted reliably.
+Builds need 30+ games; the 10 most popular are returned, with win rate delta versus the hero's baseline.
