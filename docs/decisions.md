@@ -79,3 +79,19 @@ The calculation lives in MetaCalculator (no database, no Spring) and is covered 
 
 ## Known limitation: sample size in high-rank brackets
 At tier 8+, 17 of 41 heroes have under 500 games with the current data. Loading more days of matches fixes this.
+
+## 17. Remote extraction through the data lake manifest
+DuckDB's DuckLake catalog builds file paths with backslashes on Windows, which breaks HTTPS addresses.
+Instead, the manifest is read with RestClient, files are selected by partition (match_id / 1,000,000),
+and DuckDB reads the HTTPS URLs directly with read_parquet. Only 15 of 157 columns are fetched,
+and rows are deduplicated before writing the extract: one partition is about 40 MB instead of several GB.
+
+## 18. Item inserts are streamed in batches, with a socket timeout
+Items are inserted in batches of 10,000 so memory stays flat. reWriteBatchedInserts caused a hang:
+pg_stat_activity showed PostgreSQL waiting on the client (ClientRead) while a thread dump showed Java
+blocked writing to the socket, with no data flowing. The setting was removed, and socketTimeout=300
+makes any future stall fail with an error instead of hanging forever.
+
+## Measured ingestion speed
+About 5,600 rows/second with batched inserts (partition 115: 5.68M rows in 1,007 s).
+PostgreSQL COPY is the next step if loading needs to be faster.
