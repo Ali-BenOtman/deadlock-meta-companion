@@ -32,6 +32,10 @@ public class ExtractionService {
                   AND match_mode = 'Ranked'
                   AND game_mode = 'Normal'
                   AND match_outcome = 'TeamWin'
+                QUALIFY ROW_NUMBER() OVER (
+                    PARTITION BY match_id, account_id
+                    ORDER BY created_at DESC
+                ) = 1
             ) TO '%s' (FORMAT parquet)
             """;
 

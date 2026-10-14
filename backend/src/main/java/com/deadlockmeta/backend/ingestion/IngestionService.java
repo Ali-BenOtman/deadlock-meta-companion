@@ -9,7 +9,6 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +22,7 @@ import com.deadlockmeta.backend.assets.AssetsService;
 @Service
 public class IngestionService {
 
-    private static final int ITEM_BATCH_SIZE = 50_000;
+    private static final int ITEM_BATCH_SIZE = 10_000;
 
     private static final String PLAYERS_VIEW = """
             CREATE TEMP VIEW ranked_players AS
@@ -83,12 +82,13 @@ public class IngestionService {
 
     @Transactional
     public IngestionResult ingestFile(String parquetPath) throws SQLException {
+        long matchesBefore = countRows("matches");
+        long playersBefore = countRows("match_players");
+        long itemsBefore = countRows("item_purchases");
+
         Map<Long, Object[]> matches = new LinkedHashMap<>();
         List<Object[]> players = new ArrayList<>();
         List<Object[]> itemBatch = new ArrayList<>(ITEM_BATCH_SIZE);
-        int matchesInserted;
-        int playersInserted;
-        int itemsInserted = 0;
 
         try (Connection duck = DriverManager.getConnection("jdbc:duckdb:");
                 Statement statement = duck.createStatement()) {
@@ -117,9 +117,8 @@ public class IngestionService {
 
             // Matches and players first: item purchases reference them through foreign
             // keys.
-            matchesInserted = countInserted(
-                    jdbcTemplate.batchUpdate(INSERT_MATCH_SQL, new ArrayList<>(matches.values())));
-            playersInserted = countInserted(jdbcTemplate.batchUpdate(INSERT_PLAYER_SQL, players));
+            jdbcTemplate.batchUpdate(INSERT_MATCH_SQL, new ArrayList<>(matches.values()));
+            jdbcTemplate.batchUpdate(INSERT_PLAYER_SQL, players);
             matches.clear();
             players.clear();
 
@@ -139,25 +138,29 @@ public class IngestionService {
                             soldAt == 0 ? null : soldAt });
 
                     if (itemBatch.size() >= ITEM_BATCH_SIZE) {
-                        itemsInserted += countInserted(jdbcTemplate.batchUpdate(INSERT_ITEM_SQL, itemBatch));
+                        jdbcTemplate.batchUpdate(INSERT_ITEM_SQL, itemBatch);
                         itemBatch.clear();
                     }
                 }
             }
             if (!itemBatch.isEmpty()) {
-                itemsInserted += countInserted(jdbcTemplate.batchUpdate(INSERT_ITEM_SQL, itemBatch));
+                jdbcTemplate.batchUpdate(INSERT_ITEM_SQL, itemBatch);
             }
         }
 
-        return new IngestionResult(matchesInserted, playersInserted, itemsInserted);
+        return new IngestionResult(
+                (int) (countRows("matches") - matchesBefore),
+                (int) (countRows("match_players") - playersBefore),
+                (int) (countRows("item_purchases") - itemsBefore));
+    }
+
+    private long countRows(String table) {
+        Long count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + table, Long.class);
+        return count == null ? 0 : count;
     }
 
     private static Integer nullableInt(ResultSet rows, String column) throws SQLException {
         int value = rows.getInt(column);
         return rows.wasNull() ? null : value;
-    }
-
-    private static int countInserted(int[] results) {
-        return Arrays.stream(results).filter(count -> count > 0).sum();
     }
 }
