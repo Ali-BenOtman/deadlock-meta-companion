@@ -23,6 +23,8 @@ import com.deadlockmeta.backend.assets.AssetsService;
 @Service
 public class IngestionService {
 
+    private static final int ITEM_BATCH_SIZE = 50_000;
+
     private static final String PLAYERS_VIEW = """
             CREATE TEMP VIEW ranked_players AS
             SELECT *
@@ -53,6 +55,24 @@ public class IngestionService {
             FROM ranked_players
             """;
 
+    private static final String INSERT_MATCH_SQL = """
+            INSERT INTO matches (match_id, start_time, duration_s, match_mode, average_badge, winning_team)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT (match_id) DO NOTHING
+            """;
+
+    private static final String INSERT_PLAYER_SQL = """
+            INSERT INTO match_players (match_id, account_id, hero_id, team, won)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT (match_id, account_id) DO NOTHING
+            """;
+
+    private static final String INSERT_ITEM_SQL = """
+            INSERT INTO item_purchases (match_id, account_id, item_id, bought_at_s, sold_at_s)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT DO NOTHING
+            """;
+
     private final JdbcTemplate jdbcTemplate;
     private final AssetsService assetsService;
 
@@ -65,7 +85,10 @@ public class IngestionService {
     public IngestionResult ingestFile(String parquetPath) throws SQLException {
         Map<Long, Object[]> matches = new LinkedHashMap<>();
         List<Object[]> players = new ArrayList<>();
-        List<Object[]> items = new ArrayList<>();
+        List<Object[]> itemBatch = new ArrayList<>(ITEM_BATCH_SIZE);
+        int matchesInserted;
+        int playersInserted;
+        int itemsInserted = 0;
 
         try (Connection duck = DriverManager.getConnection("jdbc:duckdb:");
                 Statement statement = duck.createStatement()) {
@@ -92,6 +115,15 @@ public class IngestionService {
                 }
             }
 
+            // Matches and players first: item purchases reference them through foreign
+            // keys.
+            matchesInserted = countInserted(
+                    jdbcTemplate.batchUpdate(INSERT_MATCH_SQL, new ArrayList<>(matches.values())));
+            playersInserted = countInserted(jdbcTemplate.batchUpdate(INSERT_PLAYER_SQL, players));
+            matches.clear();
+            players.clear();
+
+            // Items are streamed in batches so memory stays flat regardless of file size.
             try (ResultSet rows = statement.executeQuery(ITEMS_QUERY)) {
                 while (rows.next()) {
                     long itemId = rows.getLong("item_id");
@@ -99,33 +131,23 @@ public class IngestionService {
                         continue;
                     }
                     int soldAt = rows.getInt("sold_at_s");
-                    items.add(new Object[] {
+                    itemBatch.add(new Object[] {
                             rows.getLong("match_id"),
                             rows.getLong("account_id"),
                             itemId,
                             rows.getInt("bought_at_s"),
                             soldAt == 0 ? null : soldAt });
+
+                    if (itemBatch.size() >= ITEM_BATCH_SIZE) {
+                        itemsInserted += countInserted(jdbcTemplate.batchUpdate(INSERT_ITEM_SQL, itemBatch));
+                        itemBatch.clear();
+                    }
                 }
             }
+            if (!itemBatch.isEmpty()) {
+                itemsInserted += countInserted(jdbcTemplate.batchUpdate(INSERT_ITEM_SQL, itemBatch));
+            }
         }
-
-        int matchesInserted = countInserted(jdbcTemplate.batchUpdate("""
-                INSERT INTO matches (match_id, start_time, duration_s, match_mode, average_badge, winning_team)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT (match_id) DO NOTHING
-                """, new ArrayList<>(matches.values())));
-
-        int playersInserted = countInserted(jdbcTemplate.batchUpdate("""
-                INSERT INTO match_players (match_id, account_id, hero_id, team, won)
-                VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT (match_id, account_id) DO NOTHING
-                """, players));
-
-        int itemsInserted = countInserted(jdbcTemplate.batchUpdate("""
-                INSERT INTO item_purchases (match_id, account_id, item_id, bought_at_s, sold_at_s)
-                VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT DO NOTHING
-                """, items));
 
         return new IngestionResult(matchesInserted, playersInserted, itemsInserted);
     }

@@ -83,3 +83,8 @@ Hourly Parquet exports: https://deadlock-api.com/data-dumps
 - Re-processing an already-loaded file inserts 0 rows (idempotent across files)
 - 53 matches (~0.8%) have 11 players instead of 12: missing in the source data, not filtered by us
 - Base files are rebuilt as new matches arrive, so file names change over time
+
+## Ingestion speed baseline (before optimization)
+- extract_p116_p116.parquet: 14,278 matches, 171,261 players, 2,850,117 item purchases
+- 544 seconds (9 min 4 s), about 5,500 rows/second, using JdbcTemplate batchUpdate with batches of 50,000
+- The extract contained each player row about twice (base + delta copies); ingestion deduplication kept the newest
