@@ -88,3 +88,21 @@ Hourly Parquet exports: https://deadlock-api.com/data-dumps
 - extract_p116_p116.parquet: 14,278 matches, 171,261 players, 2,850,117 item purchases
 - 544 seconds (9 min 4 s), about 5,500 rows/second, using JdbcTemplate batchUpdate with batches of 50,000
 - The extract contained each player row about twice (base + delta copies); ingestion deduplication kept the newest
+
+## Full backfill (partitions 106-116)
+- Extraction (106-114): 514 source files, ~84 GB scanned, ~568 MB of local extracts, ~18 minutes total
+- Ingestion (106-114): 4 h 13 min, steady ~5,500 rows/s; partition 114 skipped the 77,586 rows already loaded from part-114
+- Totals: 423,486 matches, 5,079,886 players, 87,006,417 item purchases, 13 GB database
+- Coverage: every day from 2026-09-25 to 2026-10-14 (14-18k ranked matches per day; 14 Oct partial)
+- 2026-09-29 has a dip (11,257 matches), the date of build 6712: a likely patch-day effect
+
+## Stats endpoint speed before precomputation (87M item rows)
+- /api/meta: 4.5 s first request, 3.6 s second
+- /api/heroes/84/items: 32.5 s first (cold), 4.2 s second (warm cache)
+- /api/heroes/84/builds: failed both times at the 300 s socket timeout
+- Conclusion: computing stats on every request does not scale; precompute into summary tables
+
+## Stats endpoint speed after precomputation
+- Refresh: 521 s (complete matches 1 s, hero stats 1 s, item stats 368 s, build stats 151 s)
+- /api/meta 0.007 s, /api/heroes/84/items 0.009 s, /api/heroes/84/builds 0.108 s
+- Larger samples exposed noise: the Intensifying Magazine Rat King build went from +5.7 (411 games) to +0.6 (2,318 games)

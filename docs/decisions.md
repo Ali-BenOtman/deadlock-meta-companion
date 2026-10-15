@@ -95,3 +95,20 @@ makes any future stall fail with an error instead of hanging forever.
 ## Measured ingestion speed
 About 5,600 rows/second with batched inserts (partition 115: 5.68M rows in 1,007 s).
 PostgreSQL COPY is the next step if loading needs to be faster.
+
+## 19. Stats are precomputed into summary tables
+Computing stats per request stopped scaling at 87M item rows (meta 3.6 s, items 4-32 s, builds timed out after 300 s).
+A refresh job (POST /api/dev/refresh-stats) computes everything inside PostgreSQL in one transaction (~9 minutes)
+into small tables keyed by hero and exact rank tier. Endpoints add up the tiers at or above minTier:
+counts add exactly, and win rates are recomputed from summed counts, never by averaging percentages.
+Median buy time is approximated by a weighted average of per-tier medians.
+DELETE (not TRUNCATE) inside one transaction keeps old stats readable until the new ones commit.
+Result: meta 0.007 s, items 0.009 s, builds 0.108 s.
+
+## 20. Redis cache on top of the summary tables
+Stats responses are cached in Redis (@Cacheable, keyed by cache name and arguments, 1-hour TTL as a safety net).
+The cache is cleared only after a refresh has committed (StatsCache.evictAll called after refresh() returns),
+avoiding the race where a request recomputes from old data and re-caches stale numbers.
+Records implement Serializable (Java serialization); JSON would be more readable and robust to class changes.
+Verified: with PostgreSQL stopped, cached endpoints still answered, uncached ones failed.
+Precomputation was the big speed win; Redis mainly protects the database under load.

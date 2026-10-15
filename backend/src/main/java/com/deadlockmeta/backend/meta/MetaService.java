@@ -3,6 +3,7 @@ package com.deadlockmeta.backend.meta;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.deadlockmeta.backend.stats.HeroStatsService;
@@ -16,6 +17,7 @@ public class MetaService {
         this.heroStatsService = heroStatsService;
     }
 
+    @Cacheable("meta")
     public List<HeroTier> heroTiers(int minTier) {
         return heroStatsService.heroStats(minTier).stream()
                 .map(hero -> {
