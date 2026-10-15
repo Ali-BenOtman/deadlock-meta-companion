@@ -11,22 +11,19 @@ import com.deadlockmeta.backend.assets.AssetsService;
 public class HeroStatsService {
 
     private static final String HERO_STATS_SQL = """
-            WITH complete_matches AS (
-                SELECT mp.match_id
-                FROM match_players mp
-                JOIN matches m ON m.match_id = mp.match_id
-                WHERE m.average_badge >= ?
-                GROUP BY mp.match_id
-                HAVING COUNT(*) = 12
+            WITH totals AS (
+                SELECT SUM(matches) AS matches
+                FROM tier_match_totals
+                WHERE tier >= ?
             )
-            SELECT mp.hero_id,
-                   COUNT(*) AS games,
-                   SUM(CASE WHEN mp.won THEN 1 ELSE 0 END) AS wins,
-                   ROUND(100.0 * AVG(CASE WHEN mp.won THEN 1 ELSE 0 END), 2) AS win_rate,
-                   ROUND(100.0 * COUNT(DISTINCT mp.match_id) / (SELECT COUNT(*) FROM complete_matches), 2) AS pick_rate
-            FROM match_players mp
-            JOIN complete_matches cm ON cm.match_id = mp.match_id
-            GROUP BY mp.hero_id
+            SELECT hero_id,
+                   SUM(games) AS games,
+                   SUM(wins) AS wins,
+                   ROUND(100.0 * SUM(wins) / SUM(games), 2) AS win_rate,
+                   ROUND(100.0 * SUM(games) / (SELECT matches FROM totals), 2) AS pick_rate
+            FROM hero_tier_stats
+            WHERE tier >= ?
+            GROUP BY hero_id
             ORDER BY win_rate DESC
             """;
 
@@ -48,6 +45,7 @@ public class HeroStatsService {
                         rows.getInt("wins"),
                         rows.getDouble("win_rate"),
                         rows.getDouble("pick_rate")),
-                minTier * 10);
+                minTier,
+                minTier);
     }
 }

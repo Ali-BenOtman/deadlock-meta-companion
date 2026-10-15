@@ -13,42 +13,22 @@ public class ItemStatsService {
     private static final int MIN_BUYERS = 100;
 
     private static final String ITEM_STATS_SQL = """
-            WITH complete_matches AS (
-                SELECT mp.match_id
-                FROM match_players mp
-                JOIN matches m ON m.match_id = mp.match_id
-                WHERE m.average_badge >= ?
-                GROUP BY mp.match_id
-                HAVING COUNT(*) = 12
-            ),
-            hero_players AS (
-                SELECT mp.match_id, mp.account_id, mp.won
-                FROM match_players mp
-                JOIN complete_matches cm ON cm.match_id = mp.match_id
-                WHERE mp.hero_id = ?
-            ),
-            hero_baseline AS (
-                SELECT AVG(CASE WHEN won THEN 1 ELSE 0 END) AS win_rate,
-                       COUNT(*) AS players
-                FROM hero_players
-            ),
-            item_buys AS (
-                SELECT ip.match_id, ip.account_id, ip.item_id, MIN(ip.bought_at_s) AS first_buy_s
-                FROM item_purchases ip
-                JOIN hero_players hp ON hp.match_id = ip.match_id AND hp.account_id = ip.account_id
-                GROUP BY ip.match_id, ip.account_id, ip.item_id
+            WITH hero AS (
+                SELECT SUM(games) AS players,
+                       SUM(wins)::numeric / NULLIF(SUM(games), 0) AS win_rate
+                FROM hero_tier_stats
+                WHERE hero_id = ? AND tier >= ?
             )
-            SELECT ib.item_id,
-                   COUNT(*) AS buyers,
-                   ROUND(100.0 * COUNT(*) / (SELECT players FROM hero_baseline), 2) AS buy_rate,
-                   ROUND(100.0 * AVG(CASE WHEN hp.won THEN 1 ELSE 0 END), 2) AS win_rate,
-                   ROUND(100.0 * (AVG(CASE WHEN hp.won THEN 1 ELSE 0 END)
-                                  - (SELECT win_rate FROM hero_baseline)), 2) AS win_rate_delta,
-                   ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY ib.first_buy_s))::int AS median_buy_s
-            FROM item_buys ib
-            JOIN hero_players hp ON hp.match_id = ib.match_id AND hp.account_id = ib.account_id
-            GROUP BY ib.item_id
-            HAVING COUNT(*) >= ?
+            SELECT item_id,
+                   SUM(buyers) AS buyers,
+                   ROUND(100.0 * SUM(buyers) / (SELECT players FROM hero), 2) AS buy_rate,
+                   ROUND(100.0 * SUM(wins) / SUM(buyers), 2) AS win_rate,
+                   ROUND(100.0 * (SUM(wins)::numeric / SUM(buyers) - (SELECT win_rate FROM hero)), 2) AS win_rate_delta,
+                   ROUND(SUM(median_buy_s::numeric * buyers) / SUM(buyers))::int AS median_buy_s
+            FROM item_tier_stats
+            WHERE hero_id = ? AND tier >= ?
+            GROUP BY item_id
+            HAVING SUM(buyers) >= ?
             ORDER BY win_rate_delta DESC
             """;
 
@@ -71,8 +51,10 @@ public class ItemStatsService {
                         rows.getDouble("win_rate"),
                         rows.getDouble("win_rate_delta"),
                         rows.getInt("median_buy_s")),
-                minTier * 10,
                 heroId,
+                minTier,
+                heroId,
+                minTier,
                 MIN_BUYERS);
     }
 }
