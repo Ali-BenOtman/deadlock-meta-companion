@@ -112,3 +112,15 @@ avoiding the race where a request recomputes from old data and re-caches stale n
 Records implement Serializable (Java serialization); JSON would be more readable and robust to class changes.
 Verified: with PostgreSQL stopped, cached endpoints still answered, uncached ones failed.
 Precomputation was the big speed win; Redis mainly protects the database under load.
+
+## 21. Scheduled updates from delta files, tracked in processed_files
+Every new row appears first in an hourly delta file, so the job only processes delta and residual files it has
+not seen before (tracked by file key in processed_files), never the large rebuilt base files.
+Steps: extract recent ranked matches (last 21 days) from new files -> ingest -> record files -> refresh stats
+(only if rows were inserted) -> clear the cache -> delete the temporary extract.
+Files are recorded only after a successful ingest: a crash means reprocessing, which idempotent ingestion makes
+harmless (at-least-once processing with idempotent writes).
+@Scheduled with fixedDelay (runs never overlap), every 3 hours, configurable and switchable via app.update.*;
+an AtomicBoolean prevents a manual trigger from overlapping a scheduled run.
+Limitation: deltas are kept about a day, so downtime longer than that needs a manual partition extraction;
+the job logs a warning when it detects such a gap.
