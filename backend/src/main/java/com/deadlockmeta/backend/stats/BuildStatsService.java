@@ -3,6 +3,7 @@ package com.deadlockmeta.backend.stats;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,7 @@ public class BuildStatsService {
         this.assetsService = assetsService;
     }
 
+    @Cacheable("buildStats")
     public List<BuildStat> buildStats(int heroId, int minTier) {
         return jdbcTemplate.query(
                 BUILD_STATS_SQL,

@@ -2,6 +2,7 @@ package com.deadlockmeta.backend.stats;
 
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +36,7 @@ public class HeroStatsService {
         this.assetsService = assetsService;
     }
 
+    @Cacheable("heroStats")
     public List<HeroStat> heroStats(int minTier) {
         return jdbcTemplate.query(
                 HERO_STATS_SQL,

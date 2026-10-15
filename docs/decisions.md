@@ -104,3 +104,11 @@ counts add exactly, and win rates are recomputed from summed counts, never by av
 Median buy time is approximated by a weighted average of per-tier medians.
 DELETE (not TRUNCATE) inside one transaction keeps old stats readable until the new ones commit.
 Result: meta 0.007 s, items 0.009 s, builds 0.108 s.
+
+## 20. Redis cache on top of the summary tables
+Stats responses are cached in Redis (@Cacheable, keyed by cache name and arguments, 1-hour TTL as a safety net).
+The cache is cleared only after a refresh has committed (StatsCache.evictAll called after refresh() returns),
+avoiding the race where a request recomputes from old data and re-caches stale numbers.
+Records implement Serializable (Java serialization); JSON would be more readable and robust to class changes.
+Verified: with PostgreSQL stopped, cached endpoints still answered, uncached ones failed.
+Precomputation was the big speed win; Redis mainly protects the database under load.

@@ -9,13 +9,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class StatsRefreshDevController {
 
     private final StatsRefreshService statsRefreshService;
+    private final StatsCache statsCache;
 
-    public StatsRefreshDevController(StatsRefreshService statsRefreshService) {
+    public StatsRefreshDevController(StatsRefreshService statsRefreshService, StatsCache statsCache) {
         this.statsRefreshService = statsRefreshService;
+        this.statsCache = statsCache;
     }
 
     @PostMapping("/refresh-stats")
     public StatsRefreshResult refreshStats() {
-        return statsRefreshService.refresh();
+        StatsRefreshResult result = statsRefreshService.refresh();
+        // refresh() has returned, so its transaction is committed: the new stats are
+        // visible.
+        statsCache.evictAll();
+        return result;
     }
 }
