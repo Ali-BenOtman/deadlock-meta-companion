@@ -124,3 +124,20 @@ harmless (at-least-once processing with idempotent writes).
 an AtomicBoolean prevents a manual trigger from overlapping a scheduled run.
 Limitation: deltas are kept about a day, so downtime longer than that needs a manual partition extraction;
 the job logs a warning when it detects such a gap.
+
+## 22. Stats cover a 14-day window anchored on the newest match
+complete_matches keeps matches from the 14 days before the latest start_time (app.stats.window-days), so every
+summary table is windowed through one shared base. Anchoring on the newest match (not "now") keeps the window full
+even if updates pause. stats_refresh records window_start and window_end.
+
+## 23. Hero trends from daily stats
+hero_daily_stats (hero x tier x day) allows comparing the last 7 days with the 7 before for any rank filter.
+RISING / FALLING when the win rate changes by more than 1.5 points, NOT_ENOUGH_DATA when either week has under
+500 games. Rules live in MetaCalculator with unit tests (9 tests including the exact 1.5 boundary).
+
+## Known limitations
+- New heroes: Baba (released 2026-10-06) climbed from 36% to 58% daily win rate in a week while the 14-day
+  average shows 51%. Tiers lag for heroes released inside the window.
+- The fixed 1.5-point trend threshold ignores sample size; a confidence-based threshold would be more precise.
+- The update job's lock does not cover a separately triggered refresh; one shared lock would prevent overlap.
+- Patch-aware stats need a reliable patch-date source (separate issue).

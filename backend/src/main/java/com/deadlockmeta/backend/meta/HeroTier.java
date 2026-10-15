@@ -9,5 +9,7 @@ public record HeroTier(
                 double smoothedWinRate,
                 double winRate,
                 double pickRate,
-                int games) implements Serializable {
+                int games,
+                Trend trend,
+                Double winRateChange) implements Serializable {
 }
