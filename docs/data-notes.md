@@ -106,3 +106,8 @@ Hourly Parquet exports: https://deadlock-api.com/data-dumps
 - Refresh: 521 s (complete matches 1 s, hero stats 1 s, item stats 368 s, build stats 151 s)
 - /api/meta 0.007 s, /api/heroes/84/items 0.009 s, /api/heroes/84/builds 0.108 s
 - Larger samples exposed noise: the Intensifying Magazine Rat King build went from +5.7 (411 games) to +0.6 (2,318 games)
+
+## First automatic update (2026-10-16)
+- 65 delta/residual files (7.9 GB source) -> 612,696 rows extracted in 144 s; ingestion ~33 min; refresh 9.2 min; total 44 min
+- Added 22,776 matches, 273,225 players, 4,587,472 item purchases; complete matches now 444,270
+- Immediate rerun: NO_NEW_FILES in 0.4 s. First scheduled run at startup + 1 min: NO_NEW_FILES
