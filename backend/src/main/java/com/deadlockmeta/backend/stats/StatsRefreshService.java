@@ -2,6 +2,7 @@ package com.deadlockmeta.backend.stats;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,11 +14,14 @@ public class StatsRefreshService {
 
     private static final String CREATE_COMPLETE_MATCHES = """
             CREATE TEMP TABLE complete_matches ON COMMIT DROP AS
-            SELECT m.match_id, (m.average_badge / 10)::smallint AS tier
+            SELECT m.match_id,
+                   (m.average_badge / 10)::smallint AS tier,
+                   (m.start_time AT TIME ZONE 'UTC')::date AS day
             FROM matches m
             JOIN match_players mp ON mp.match_id = m.match_id
             WHERE m.average_badge IS NOT NULL
-            GROUP BY m.match_id, m.average_badge
+              AND m.start_time >= (SELECT MAX(start_time) FROM matches) - make_interval(days => %d)
+            GROUP BY m.match_id, m.average_badge, m.start_time
             HAVING COUNT(*) = 12
             """;
 
@@ -34,6 +38,14 @@ public class StatsRefreshService {
             FROM match_players mp
             JOIN complete_matches cm ON cm.match_id = mp.match_id
             GROUP BY mp.hero_id, cm.tier
+            """;
+
+    private static final String INSERT_HERO_DAILY_STATS = """
+            INSERT INTO hero_daily_stats (hero_id, tier, day, games, wins)
+            SELECT mp.hero_id, cm.tier, cm.day, COUNT(*), SUM(CASE WHEN mp.won THEN 1 ELSE 0 END)
+            FROM match_players mp
+            JOIN complete_matches cm ON cm.match_id = mp.match_id
+            GROUP BY mp.hero_id, cm.tier, cm.day
             """;
 
     private static final String INSERT_ITEM_STATS = """
@@ -54,9 +66,10 @@ public class StatsRefreshService {
 
     private static final String INSERT_BUILD_STATS = """
             WITH first_buys AS (
-                SELECT match_id, account_id, item_id, MIN(bought_at_s) AS first_buy_s
-                FROM item_purchases
-                GROUP BY match_id, account_id, item_id
+                SELECT ip.match_id, ip.account_id, ip.item_id, MIN(ip.bought_at_s) AS first_buy_s
+                FROM item_purchases ip
+                JOIN complete_matches cm ON cm.match_id = ip.match_id
+                GROUP BY ip.match_id, ip.account_id, ip.item_id
             ),
             ordered_buys AS (
                 SELECT match_id, account_id, item_id,
@@ -81,18 +94,24 @@ public class StatsRefreshService {
             """;
 
     private static final String UPSERT_REFRESH = """
-            INSERT INTO stats_refresh (id, refreshed_at, duration_ms, matches_used)
-            VALUES (1, now(), ?, ?)
+            INSERT INTO stats_refresh (id, refreshed_at, duration_ms, matches_used, window_start, window_end)
+            SELECT 1, now(), ?, ?, MAX(start_time) - make_interval(days => ?), MAX(start_time)
+            FROM matches
             ON CONFLICT (id) DO UPDATE
             SET refreshed_at = EXCLUDED.refreshed_at,
                 duration_ms  = EXCLUDED.duration_ms,
-                matches_used = EXCLUDED.matches_used
+                matches_used = EXCLUDED.matches_used,
+                window_start = EXCLUDED.window_start,
+                window_end   = EXCLUDED.window_end
             """;
 
     private final JdbcTemplate jdbcTemplate;
+    private final int windowDays;
 
-    public StatsRefreshService(JdbcTemplate jdbcTemplate) {
+    public StatsRefreshService(JdbcTemplate jdbcTemplate,
+                               @Value("${app.stats.window-days}") int windowDays) {
         this.jdbcTemplate = jdbcTemplate;
+        this.windowDays = windowDays;
     }
 
     @Transactional
@@ -101,24 +120,26 @@ public class StatsRefreshService {
 
         jdbcTemplate.execute("SET LOCAL work_mem = '256MB'");
 
-        step("Complete matches", CREATE_COMPLETE_MATCHES);
+        step("Complete matches (last " + windowDays + " days)", CREATE_COMPLETE_MATCHES.formatted(windowDays));
         jdbcTemplate.execute("CREATE INDEX ON complete_matches (match_id)");
         jdbcTemplate.execute("ANALYZE complete_matches");
         Integer matchesUsed = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM complete_matches", Integer.class);
 
         jdbcTemplate.update("DELETE FROM tier_match_totals");
         jdbcTemplate.update("DELETE FROM hero_tier_stats");
+        jdbcTemplate.update("DELETE FROM hero_daily_stats");
         jdbcTemplate.update("DELETE FROM item_tier_stats");
         jdbcTemplate.update("DELETE FROM build_tier_stats");
 
         step("Tier totals", INSERT_TIER_TOTALS);
         int heroRows = step("Hero stats", INSERT_HERO_STATS);
+        step("Hero daily stats", INSERT_HERO_DAILY_STATS);
         int itemRows = step("Item stats", INSERT_ITEM_STATS);
         int buildRows = step("Build stats", INSERT_BUILD_STATS);
 
         long durationMs = (System.nanoTime() - startedAt) / 1_000_000;
         int matches = matchesUsed == null ? 0 : matchesUsed;
-        jdbcTemplate.update(UPSERT_REFRESH, durationMs, matches);
+        jdbcTemplate.update(UPSERT_REFRESH, durationMs, matches, windowDays);
 
         log.info("Stats refresh finished in {} s", String.format("%.1f", durationMs / 1000.0));
         return new StatsRefreshResult(matches, heroRows, itemRows, buildRows, durationMs / 1000.0);
