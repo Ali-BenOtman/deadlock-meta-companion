@@ -20,6 +20,7 @@ import com.deadlockmeta.backend.extraction.Manifest;
 import com.deadlockmeta.backend.extraction.ManifestClient;
 import com.deadlockmeta.backend.ingestion.IngestionResult;
 import com.deadlockmeta.backend.ingestion.IngestionService;
+import com.deadlockmeta.backend.retention.RetentionService;
 import com.deadlockmeta.backend.stats.StatsCache;
 import com.deadlockmeta.backend.stats.StatsRefreshService;
 
@@ -31,6 +32,7 @@ public class DataUpdateService {
     private final ManifestClient manifestClient;
     private final ExtractionService extractionService;
     private final IngestionService ingestionService;
+    private final RetentionService retentionService;
     private final StatsRefreshService statsRefreshService;
     private final StatsCache statsCache;
     private final JdbcTemplate jdbcTemplate;
@@ -42,6 +44,7 @@ public class DataUpdateService {
     public DataUpdateService(ManifestClient manifestClient,
             ExtractionService extractionService,
             IngestionService ingestionService,
+            RetentionService retentionService,
             StatsRefreshService statsRefreshService,
             StatsCache statsCache,
             JdbcTemplate jdbcTemplate,
@@ -50,6 +53,7 @@ public class DataUpdateService {
         this.manifestClient = manifestClient;
         this.extractionService = extractionService;
         this.ingestionService = ingestionService;
+        this.retentionService = retentionService;
         this.statsRefreshService = statsRefreshService;
         this.statsCache = statsCache;
         this.jdbcTemplate = jdbcTemplate;
@@ -112,6 +116,10 @@ public class DataUpdateService {
             jdbcTemplate.batchUpdate(
                     "INSERT INTO processed_files (file_key, kind, rows) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
                     newFiles.stream().map(file -> new Object[] { file.key(), file.kind(), file.rows() }).toList());
+
+            // New matches move the newest start time forward, so the oldest day may now be
+            // outside retention.
+            retentionService.deleteOldMatches();
 
             boolean refreshed = false;
             if (ingested.playersInserted() > 0) {

@@ -149,3 +149,14 @@ DuckDB's native code needs glibc. Runs as a non-root user. Dependencies are cach
 (71 s download vs 3.8 s compile). Compose passes configuration through environment variables (service names
 postgres/redis instead of localhost), waits for PostgreSQL with a pg_isready healthcheck, and restarts the app
 unless stopped. For coding sessions, start only postgres and redis and run the app locally.
+
+## 25. Data retention and index cleanup
+Measured first: item_purchases was 14 GB, of which 5.6 GB rows, an 8.1 GB primary key (about 2x bloated from
+out-of-order loading) and a 603 MB item_id index with 0 uses since stats moved to summary tables.
+- V5 drops the unused index.
+- Retention deletes matches older than 21 days (relative to the newest match; above the 14-day stats window) in
+  batches of 2,000 matches, one transaction each, children before parents. Runs in the update job after ingestion.
+  First run: 140,304 matches, 1.68M players, 29.1M item purchases deleted in 51 s (~570k rows/s via primary keys).
+- One-time VACUUM (FULL, ANALYZE): database 15 GB -> 8.2 GB, primary key 8.1 GB -> 3.25 GB.
+Steady state: about 21 days of data, ~8 GB. If index bloat returns, REINDEX INDEX CONCURRENTLY rebuilds it
+without locking the table.
