@@ -141,3 +141,11 @@ RISING / FALLING when the win rate changes by more than 1.5 points, NOT_ENOUGH_D
 - The fixed 1.5-point trend threshold ignores sample size; a confidence-based threshold would be more precise.
 - The update job's lock does not cover a separately triggered refresh; one shared lock would prevent overlap.
 - Patch-aware stats need a reliable patch-date source (separate issue).
+
+## 24. Backend runs in Docker
+Multi-stage Dockerfile: Maven + JDK 17 build stage, JRE 17 run stage with only the jar (420 MB, mostly the JRE
+and DuckDB's native libraries). The official Maven image avoids mvnw line-ending problems on Windows. Not Alpine:
+DuckDB's native code needs glibc. Runs as a non-root user. Dependencies are cached in their own layer
+(71 s download vs 3.8 s compile). Compose passes configuration through environment variables (service names
+postgres/redis instead of localhost), waits for PostgreSQL with a pg_isready healthcheck, and restarts the app
+unless stopped. For coding sessions, start only postgres and redis and run the app locally.
