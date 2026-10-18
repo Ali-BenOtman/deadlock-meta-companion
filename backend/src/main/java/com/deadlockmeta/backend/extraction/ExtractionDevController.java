@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.context.annotation.Profile;
 
+@Profile("dev")
 @RestController
 @RequestMapping("/api/dev")
 public class ExtractionDevController {

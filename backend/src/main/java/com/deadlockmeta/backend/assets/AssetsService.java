@@ -69,6 +69,12 @@ public class AssetsService {
         return hero != null ? hero.name() : "Unknown hero " + heroId;
     }
 
+    public boolean isKnownHero(int heroId) {
+        // If assets failed to load, don't reject every request: we can't tell real
+        // heroes from fake ones.
+        return heroes.isEmpty() || heroes.containsKey(heroId);
+    }
+
     public String itemName(long itemId) {
         ItemAsset item = items.get(itemId);
         return item != null ? item.name() : "Unknown item " + itemId;
