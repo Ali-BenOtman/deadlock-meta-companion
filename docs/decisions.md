@@ -160,3 +160,14 @@ out-of-order loading) and a 603 MB item_id index with 0 uses since stats moved t
 - One-time VACUUM (FULL, ANALYZE): database 15 GB -> 8.2 GB, primary key 8.1 GB -> 3.25 GB.
 Steady state: about 21 days of data, ~8 GB. If index bloat returns, REINDEX INDEX CONCURRENTLY rebuilds it
 without locking the table.
+
+## 26. Production hardening
+- Dev endpoints (extract, ingest-all, refresh-stats, run-update, retention, assets-summary) only exist with the
+  "dev" profile (@Profile). Production runs without it; the scheduler still runs. Local coding:
+  `.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"`. Verified: 404 without the profile.
+- PostgreSQL, Redis and the backend are published on 127.0.0.1 only. Docker's published ports bypass the host
+  firewall (ufw), so binding to localhost is what actually keeps them off the internet.
+- Redis requires a password (REDIS_PASSWORD in infra/.env). Verified: NOAUTH without it.
+- Actuator exposes only health without details; error responses include no stack traces or exception messages.
+- Unknown hero IDs return 404 before touching the cache or database. Validation fails open if assets could not
+  be loaded at startup, so an outage of the assets API does not take the whole API down.

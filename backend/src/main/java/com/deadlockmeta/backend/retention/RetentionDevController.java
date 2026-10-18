@@ -3,7 +3,9 @@ package com.deadlockmeta.backend.retention;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.annotation.Profile;
 
+@Profile("dev")
 @RestController
 @RequestMapping("/api/dev")
 public class RetentionDevController {
