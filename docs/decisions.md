@@ -180,3 +180,12 @@ Covered: ingestion idempotency, refresh + meta/items/builds numbers and rank fil
 keeps recent), security (dev endpoints 404 without profile, unknown hero 404, invalid minTier 400).
 20 tests in ~24 s. GitHub Actions runs them plus a Docker build on every push to main and every PR;
 Dependabot proposes weekly updates for Maven, Docker and Actions.
+
+## 28. Caddy in front, memory limits
+Caddy is the only service exposed to the internet (80/443); it obtains HTTPS certificates automatically,
+returns 404 itself for /api/dev/* and /actuator/* (except health) as a second layer behind the dev profile,
+adds security headers (HSTS, CSP default-src 'none', nosniff, frame denial, no-referrer) and removes Server/Via.
+Memory limits sized for an 8 GB server: PostgreSQL 3 GB (shared_buffers 1 GB), backend 3 GB
+(MaxRAMPercentage 75), Redis 256 MB (maxmemory 200 MB, allkeys-lru), Caddy 128 MB.
+SPRING_PROFILES_ACTIVE is empty by default; dev is only set temporarily on the server for the initial
+data load, with the calls made from the server itself.
