@@ -171,3 +171,12 @@ without locking the table.
 - Actuator exposes only health without details; error responses include no stack traces or exception messages.
 - Unknown hero IDs return 404 before touching the cache or database. Validation fails open if assets could not
   be loaded at startup, so an outage of the assets API does not take the whole API down.
+
+  ## 27. Integration tests and CI
+Testcontainers starts a throwaway PostgreSQL 17 and Redis 7.4 (singleton containers shared by all test classes);
+Flyway builds the schema from scratch on every run. AssetsService is mocked so tests never depend on the internet.
+Test data is generated with DuckDB (TestData) with known outcomes, so expected stats can be computed by hand.
+Covered: ingestion idempotency, refresh + meta/items/builds numbers and rank filtering, retention (deletes old,
+keeps recent), security (dev endpoints 404 without profile, unknown hero 404, invalid minTier 400).
+20 tests in ~24 s. GitHub Actions runs them plus a Docker build on every push to main and every PR;
+Dependabot proposes weekly updates for Maven, Docker and Actions.
