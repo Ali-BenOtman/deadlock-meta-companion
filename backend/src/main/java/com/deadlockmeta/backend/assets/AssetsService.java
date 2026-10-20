@@ -69,6 +69,14 @@ public class AssetsService {
         return hero != null ? hero.name() : "Unknown hero " + heroId;
     }
 
+    public String heroImageUrl(int heroId) {
+        HeroAsset hero = heroes.get(heroId);
+        if (hero == null || hero.images() == null) {
+            return null;
+        }
+        return hero.images().iconSmallWebp();
+    }
+
     public boolean isKnownHero(int heroId) {
         // If assets failed to load, don't reject every request: we can't tell real
         // heroes from fake ones.
