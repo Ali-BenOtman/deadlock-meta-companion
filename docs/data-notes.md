@@ -127,3 +127,10 @@ Hourly Parquet exports: https://deadlock-api.com/data-dumps
 - External checks: SSL Labs A+, securityheaders.com A+, only ports 22/80/443 reachable from outside.
 - Within ~20 s of going live, an automated scanner probed for a Jira vulnerability (META-INF path);
   Spring rejected it.
+
+  ## Faster stats refresh (2026-10-20, laptop, ~242k matches in window)
+- Before: item stats 231.6 s, build stats 93.9 s, total 328.0 s
+- After: window players 1.0 s (2.91M rows), window first buys 61.2 s (48.98M rows),
+  item stats 54.8 s, build stats 41.8 s, total 163.6 s -> 2.0x faster
+- Identical output row counts (473 hero, 68,882 item, 916,510 build rows);
+  integration tests (exact expected values) unchanged and green
