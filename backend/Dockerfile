@@ -7,7 +7,7 @@ COPY src ./src
 RUN mvn -q -B package -DskipTests
 
 # Run stage: only a Java runtime and the built jar
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 RUN useradd --create-home --uid 1001 app && mkdir -p /app/data && chown -R app:app /app
 COPY --from=build /build/target/*.jar app.jar
