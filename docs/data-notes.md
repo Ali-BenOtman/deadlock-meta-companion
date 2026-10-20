@@ -111,3 +111,19 @@ Hourly Parquet exports: https://deadlock-api.com/data-dumps
 - 65 delta/residual files (7.9 GB source) -> 612,696 rows extracted in 144 s; ingestion ~33 min; refresh 9.2 min; total 44 min
 - Added 22,776 matches, 273,225 players, 4,587,472 item purchases; complete matches now 444,270
 - Immediate rerun: NO_NEW_FILES in 0.4 s. First scheduled run at startup + 1 min: NO_NEW_FILES
+
+## Production server (Contabo VPS, 2026-10-19/20)
+- Hardware: 4 shared vCPU, 8 GB RAM, 100 GB SSD, Ubuntu 24.04, Docker Compose with Caddy in front
+- First scheduled update on an empty database: 60 delta/residual files (9.6 GB source) -> 580,214 players,
+  9.9M item purchases; extraction 43 s, ingestion ~7.5 min, total 561.7 s
+- Ingestion is ~3-4x faster than on the Windows laptop: no Docker Desktop VM networking layer between
+  the app and PostgreSQL. The ~5,500 rows/s measured locally was largely a Windows/Docker Desktop effect.
+- Backfill of partitions 108-120: ~1 min extraction per partition (~12 GB source -> ~70 MB each);
+  ingestion of 13 files: 329,941 matches, 3.96M players, 67.4M item purchases.
+  Partition 121 did not exist yet (HTTP 500 for that call, expected).
+- Stats refresh on the full 14-day window (~243k matches): 1,291-1,370 s on the server vs 333 s on the laptop.
+  Item stats alone: 930 s. CPU-heavy aggregation is ~4x slower on shared vCPUs -> main optimization target.
+- Typical scheduled update (3 new files, ~3.4k matches): 1,558 s total, almost all of it the stats refresh.
+- External checks: SSL Labs A+, securityheaders.com A+, only ports 22/80/443 reachable from outside.
+- Within ~20 s of going live, an automated scanner probed for a Jira vulnerability (META-INF path);
+  Spring rejected it.
