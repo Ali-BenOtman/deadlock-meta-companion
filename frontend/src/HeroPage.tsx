@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import type { BuildStat, ItemStat } from './types'
+import type { BuildStat, HeroMeta, ItemStat } from './types'
 
 function formatTime(seconds: number | null): string {
     if (seconds === null) return 'n/a'
@@ -24,6 +24,7 @@ async function getJson<T>(url: string): Promise<T> {
 
 export default function HeroPage() {
     const { heroId } = useParams()
+    const [hero, setHero] = useState<HeroMeta | null>(null)
     const [items, setItems] = useState<ItemStat[]>([])
     const [builds, setBuilds] = useState<BuildStat[]>([])
     const [minBuyRate, setMinBuyRate] = useState(5)
@@ -31,12 +32,15 @@ export default function HeroPage() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-
-        Promise.all([
-            getJson<ItemStat[]>(`/api/heroes/${heroId}/items`),
-            getJson<BuildStat[]>(`/api/heroes/${heroId}/builds`),
-        ])
-            .then(([itemData, buildData]) => {
+        getJson<HeroMeta[]>('/api/meta')
+            .then(async (heroes) => {
+                const found = heroes.find((h) => String(h.heroId) === heroId)
+                if (!found) return
+                const [itemData, buildData] = await Promise.all([
+                    getJson<ItemStat[]>(`/api/heroes/${heroId}/items`),
+                    getJson<BuildStat[]>(`/api/heroes/${heroId}/builds`),
+                ])
+                setHero(found)
                 setItems(itemData)
                 setBuilds(buildData)
             })
@@ -46,13 +50,39 @@ export default function HeroPage() {
 
     if (loading) return <p className="status">Loading...</p>
     if (error) return <p className="status">Failed to load: {error}</p>
+    if (!hero) {
+        return (
+            <main className="page">
+                <Link to="/">← Back to tier list</Link>
+                <h1>Hero not found</h1>
+            </main>
+        )
+    }
 
     const shownItems = items.filter((item) => item.buyRate >= minBuyRate).slice(0, 20)
 
     return (
         <main className="page">
             <Link to="/">← Back to tier list</Link>
-            <h1>Hero {heroId}</h1>
+
+            <header className="hero-header">
+                {hero.imageUrl ? (
+                    <img src={hero.imageUrl} alt={hero.heroName} width={96} height={96} />
+                ) : (
+                    <div className="hero-header-fallback" aria-hidden="true">
+                        {hero.heroName.charAt(0)}
+                    </div>
+                )}
+                <div>
+                    <h1>{hero.heroName}</h1>
+                    <p className="hero-summary">
+                        <span className={`tier-badge tier-${hero.tier}`}>{hero.tier}</span>{' '}
+                        {hero.winRate.toFixed(1)}% win rate · {hero.pickRate.toFixed(1)}% pick rate ·{' '}
+                        {hero.games.toLocaleString()} games
+                    </p>
+                </div>
+            </header>
+
             <p className="subtitle">
                 Item win rates are correlational: players who are ahead buy items sooner and win more.
             </p>
