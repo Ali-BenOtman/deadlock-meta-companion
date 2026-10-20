@@ -189,3 +189,11 @@ Memory limits sized for an 8 GB server: PostgreSQL 3 GB (shared_buffers 1 GB), b
 (MaxRAMPercentage 75), Redis 256 MB (maxmemory 200 MB, allkeys-lru), Caddy 128 MB.
 SPRING_PROFILES_ACTIVE is empty by default; dev is only set temporarily on the server for the initial
 data load, with the calls made from the server itself.
+
+## 29. Shared window tables in the stats refresh
+Item stats and build stats each grouped raw purchases into "first buy per player and item";
+item stats did it over all 21 days of retention before filtering to the 14-day window.
+Now the refresh builds window_players and window_first_buys once (filtered to the window first)
+and every step reads them. Results are identical (integration tests check exact values);
+the laptop refresh went from 328 s to 164 s. The index on complete_matches was dropped:
+the large hash joins don't use it.
