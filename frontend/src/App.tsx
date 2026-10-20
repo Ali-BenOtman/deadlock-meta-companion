@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
-import type { HeroMeta } from './types'
+import HeroTile from './HeroTile'
+import type { HeroMeta, Tier } from './types'
+import './App.css'
 
-function formatChange(change: number | null): string {
-  if (change === null) return 'n/a'
-  const sign = change > 0 ? '+' : ''
-  return `${sign}${change.toFixed(2)}`
-}
+const TIER_ORDER: Tier[] = ['S', 'A', 'B', 'C', 'D']
 
 function App() {
   const [heroes, setHeroes] = useState<HeroMeta[]>([])
@@ -25,20 +23,27 @@ function App() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <p>Loading...</p>
-  if (error) return <p>Failed to load: {error}</p>
+  if (loading) return <p className="status">Loading...</p>
+  if (error) return <p className="status">Failed to load: {error}</p>
 
   return (
-    <main>
+    <main className="page">
       <h1>Deadlock Meta</h1>
-      <ul>
-        {heroes.map((hero) => (
-          <li key={hero.heroId}>
-            {hero.tier} | {hero.heroName} | {hero.smoothedWinRate.toFixed(2)}% |{' '}
-            {hero.trend} | {formatChange(hero.winRateChange)}
-          </li>
-        ))}
-      </ul>
+      <p className="subtitle">Hero tiers from the last 14 days of ranked matches</p>
+      {TIER_ORDER.map((tier) => {
+        const inTier = heroes.filter((hero) => hero.tier === tier)
+        if (inTier.length === 0) return null
+        return (
+          <section key={tier} className="tier-row">
+            <div className={`tier-label tier-${tier}`}>{tier}</div>
+            <div className="tier-heroes">
+              {inTier.map((hero) => (
+                <HeroTile key={hero.heroId} hero={hero} />
+              ))}
+            </div>
+          </section>
+        )
+      })}
     </main>
   )
 }
