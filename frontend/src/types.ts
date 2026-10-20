@@ -12,4 +12,5 @@ export interface HeroMeta {
     games: number
     trend: Trend
     winRateChange: number | null
+    imageUrl: string | null
 }
