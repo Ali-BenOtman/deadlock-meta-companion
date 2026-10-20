@@ -14,3 +14,21 @@ export interface HeroMeta {
     winRateChange: number | null
     imageUrl: string | null
 }
+
+export interface ItemStat {
+    itemId: number
+    itemName: string
+    buyers: number
+    buyRate: number
+    winRate: number
+    winRateDelta: number
+    medianBuySeconds: number | null
+}
+
+export interface BuildStat {
+    itemIds: number[]
+    itemNames: string[]
+    games: number
+    winRate: number
+    winRateDelta: number
+}

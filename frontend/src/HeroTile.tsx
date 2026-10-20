@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { HeroMeta, Trend } from './types'
 
 const TREND_SYMBOL: Record<Trend, string> = {
@@ -27,7 +28,7 @@ export default function HeroTile({ hero }: { hero: HeroMeta }) {
         `${TREND_LABEL[hero.trend]} (${formatChange(hero.winRateChange)})`
 
     return (
-        <div className="tile" title={title}>
+        <Link className="tile" title={title} to={`/hero/${hero.heroId}`}>
             {hero.imageUrl ? (
                 <img src={hero.imageUrl} alt={hero.heroName} width={64} height={64} loading="lazy" />
             ) : (
@@ -40,6 +41,6 @@ export default function HeroTile({ hero }: { hero: HeroMeta }) {
             <span className={`tile-trend trend-${hero.trend.toLowerCase()}`}>
                 {TREND_SYMBOL[hero.trend]}
             </span>
-        </div>
+        </Link>
     )
 }
