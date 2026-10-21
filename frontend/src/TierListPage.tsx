@@ -27,7 +27,7 @@ function TierListPage() {
 
   return (
     <main className="page">
-      <h1>Deadlock Meta</h1>
+      <h1>Hero Tier List</h1>
       <p className="subtitle">Hero tiers from the last 14 days of ranked matches</p>
       {TIER_ORDER.map((tier) => {
         const inTier = heroes.filter((hero) => hero.tier === tier)

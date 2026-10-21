@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import type { BuildStat, HeroMeta, ItemStat } from './types'
 
+const SECTIONS = [
+    { id: 'builds', label: 'Builds' },
+    { id: 'items', label: 'Items' },
+]
+
 function formatTime(seconds: number | null): string {
     if (seconds === null) return 'n/a'
     const minutes = Math.floor(seconds / 60)
@@ -28,6 +33,7 @@ export default function HeroPage() {
     const [items, setItems] = useState<ItemStat[]>([])
     const [builds, setBuilds] = useState<BuildStat[]>([])
     const [minBuyRate, setMinBuyRate] = useState(5)
+    const [active, setActive] = useState('builds')
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
 
@@ -48,12 +54,30 @@ export default function HeroPage() {
             .finally(() => setLoading(false))
     }, [heroId])
 
+    useEffect(() => {
+        if (!hero) return
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const visible = entries
+                    .filter((entry) => entry.isIntersecting)
+                    .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+                if (visible.length > 0) setActive(visible[0].target.id)
+            },
+            { rootMargin: '-90px 0px -60% 0px' },
+        )
+        SECTIONS.forEach(({ id }) => {
+            const element = document.getElementById(id)
+            if (element) observer.observe(element)
+        })
+        return () => observer.disconnect()
+    }, [hero])
+
     if (loading) return <p className="status">Loading...</p>
     if (error) return <p className="status">Failed to load: {error}</p>
     if (!hero) {
         return (
             <main className="page">
-                <Link to="/">← Back to tier list</Link>
+                <Link to="/tier-list">← Back to tier list</Link>
                 <h1>Hero not found</h1>
             </main>
         )
@@ -63,7 +87,7 @@ export default function HeroPage() {
 
     return (
         <main className="page">
-            <Link to="/">← Back to tier list</Link>
+            <Link to="/tier-list">← Back to tier list</Link>
 
             <header className="hero-header">
                 {hero.imageUrl ? (
@@ -83,55 +107,80 @@ export default function HeroPage() {
                 </div>
             </header>
 
-            <p className="subtitle">
-                Item win rates are correlational: players who are ahead buy items sooner and win more.
-            </p>
-
-            <h2>Best items</h2>
-            <label>
-                Minimum buy rate: {minBuyRate}%{' '}
-                <input
-                    type="range"
-                    min={0}
-                    max={30}
-                    step={1}
-                    value={minBuyRate}
-                    onChange={(e) => setMinBuyRate(Number(e.target.value))}
-                />
-            </label>
-            <table className="stats-table">
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Win rate</th>
-                        <th>vs hero avg</th>
-                        <th>Buy rate</th>
-                        <th>Median buy</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {shownItems.map((item) => (
-                        <tr key={item.itemId}>
-                            <td>{item.itemName}</td>
-                            <td>{item.winRate.toFixed(1)}%</td>
-                            <td>{formatDelta(item.winRateDelta)}</td>
-                            <td>{item.buyRate.toFixed(1)}%</td>
-                            <td>{formatTime(item.medianBuySeconds)}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
-            <h2>Top builds</h2>
-            <ul className="build-list">
-                {builds.map((build) => (
-                    <li key={build.itemIds.join('-')}>
-                        <strong>{build.winRate.toFixed(1)}%</strong> ({formatDelta(build.winRateDelta)}) ·{' '}
-                        {build.games.toLocaleString()} games
-                        <div>{build.itemNames.join(' → ')}</div>
-                    </li>
+            <nav className="section-bar" aria-label="Hero page sections">
+                {SECTIONS.map(({ id, label }) => (
+                    <Link
+                        key={id}
+                        to={{ hash: `#${id}` }}
+                        replace
+                        className={active === id ? 'active' : undefined}
+                    >
+                        {label}
+                    </Link>
                 ))}
-            </ul>
+            </nav>
+
+            <section id="builds" className="hero-section">
+                <h2>Starting builds</h2>
+                <p className="subtitle">
+                    The most-played first six items. The order they were bought in is not tracked.
+                </p>
+                <ul className="build-list">
+                    {builds.map((build) => (
+                        <li key={build.itemIds.join('-')}>
+                            <strong>{build.winRate.toFixed(1)}%</strong> ({formatDelta(build.winRateDelta)}) ·{' '}
+                            {build.games.toLocaleString()} games
+                            <div className="build-items">
+                                {build.itemNames.map((name) => (
+                                    <span key={name} className="chip">
+                                        {name}
+                                    </span>
+                                ))}
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+
+            <section id="items" className="hero-section">
+                <h2>Best items</h2>
+                <p className="subtitle">
+                    Item win rates are correlational: players who are ahead buy items sooner and win more.
+                </p>
+                <label>
+                    Minimum buy rate: {minBuyRate}%{' '}
+                    <input
+                        type="range"
+                        min={0}
+                        max={30}
+                        step={1}
+                        value={minBuyRate}
+                        onChange={(e) => setMinBuyRate(Number(e.target.value))}
+                    />
+                </label>
+                <table className="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Win rate</th>
+                            <th>vs hero avg</th>
+                            <th>Buy rate</th>
+                            <th>Median buy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {shownItems.map((item) => (
+                            <tr key={item.itemId}>
+                                <td>{item.itemName}</td>
+                                <td>{item.winRate.toFixed(1)}%</td>
+                                <td>{formatDelta(item.winRateDelta)}</td>
+                                <td>{item.buyRate.toFixed(1)}%</td>
+                                <td>{formatTime(item.medianBuySeconds)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </section>
         </main>
     )
 }
