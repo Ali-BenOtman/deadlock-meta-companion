@@ -197,3 +197,9 @@ Now the refresh builds window_players and window_first_buys once (filtered to th
 and every step reads them. Results are identical (integration tests check exact values);
 the laptop refresh went from 328 s to 164 s. The index on complete_matches was dropped:
 the large hash joins don't use it.
+
+## 30. Complete 12-item builds are not shown as a ranking
+Measured on the server (21 days of data): Paige had 39,275 distinct 12-item builds among 42,568
+players with a full inventory (92% unique); the most repeated build had 129 games and 7 builds
+had 30+. Warden (rarely picked) had 11,181 distinct builds, a top build of 26 games and none
+with 30+. The site shows phase-based item stats instead.
