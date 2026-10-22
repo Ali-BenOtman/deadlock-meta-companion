@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import type { HeroMeta, Trend } from './types'
 
 const TREND_SYMBOL: Record<Trend, string> = {
@@ -22,13 +22,14 @@ function formatChange(change: number | null): string {
 }
 
 export default function HeroTile({ hero }: { hero: HeroMeta }) {
+    const { search } = useLocation()
     const title =
         `${hero.heroName}: ${hero.winRate.toFixed(2)}% win rate, ` +
         `${hero.pickRate.toFixed(1)}% pick rate, ${hero.games.toLocaleString()} games. ` +
         `${TREND_LABEL[hero.trend]} (${formatChange(hero.winRateChange)})`
 
     return (
-        <Link className="tile" title={title} to={`/hero/${hero.heroId}`}>
+        <Link className="tile" title={title} to={{ pathname: `/hero/${hero.heroId}`, search }}>
             {hero.imageUrl ? (
                 <img src={hero.imageUrl} alt={hero.heroName} width={64} height={64} loading="lazy" />
             ) : (
