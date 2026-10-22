@@ -5,10 +5,12 @@ import Nav from './Nav'
 import ScrollToHash from './ScrollToHash'
 import TierListPage from './TierListPage'
 import './App.css'
+import { useRank } from './rank'
 
 function HeroRoute() {
   const { heroId } = useParams()
-  return <HeroPage key={heroId} />
+  const { minTier } = useRank()
+  return <HeroPage key={`${heroId}-${minTier}`} />
 }
 
 function App() {

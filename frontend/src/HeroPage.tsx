@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import RankFilter from './RankFilter'
+import { tierLabel, useRank } from './rank'
 import type { BuildStat, HeroMeta, ItemStat } from './types'
 
 const SECTIONS = [
@@ -29,6 +31,8 @@ async function getJson<T>(url: string): Promise<T> {
 
 export default function HeroPage() {
     const { heroId } = useParams()
+    const { search } = useLocation()
+    const { minTier } = useRank()
     const [hero, setHero] = useState<HeroMeta | null>(null)
     const [items, setItems] = useState<ItemStat[]>([])
     const [builds, setBuilds] = useState<BuildStat[]>([])
@@ -38,21 +42,30 @@ export default function HeroPage() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        getJson<HeroMeta[]>('/api/meta')
+        let cancelled = false
+        getJson<HeroMeta[]>(`/api/meta?minTier=${minTier}`)
             .then(async (heroes) => {
                 const found = heroes.find((h) => String(h.heroId) === heroId)
                 if (!found) return
                 const [itemData, buildData] = await Promise.all([
-                    getJson<ItemStat[]>(`/api/heroes/${heroId}/items`),
-                    getJson<BuildStat[]>(`/api/heroes/${heroId}/builds`),
+                    getJson<ItemStat[]>(`/api/heroes/${heroId}/items?minTier=${minTier}`),
+                    getJson<BuildStat[]>(`/api/heroes/${heroId}/builds?minTier=${minTier}`),
                 ])
+                if (cancelled) return
                 setHero(found)
                 setItems(itemData)
                 setBuilds(buildData)
             })
-            .catch((e: Error) => setError(e.message))
-            .finally(() => setLoading(false))
-    }, [heroId])
+            .catch((e: Error) => {
+                if (!cancelled) setError(e.message)
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false)
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [heroId, minTier])
 
     useEffect(() => {
         if (!hero) return
@@ -77,8 +90,10 @@ export default function HeroPage() {
     if (!hero) {
         return (
             <main className="page">
-                <Link to="/tier-list">← Back to tier list</Link>
+                <Link to={{ pathname: '/tier-list', search }}>← Back to tier list</Link>
                 <h1>Hero not found</h1>
+                <p className="subtitle">There is no data for this hero at the selected rank.</p>
+                <RankFilter />
             </main>
         )
     }
@@ -87,7 +102,7 @@ export default function HeroPage() {
 
     return (
         <main className="page">
-            <Link to="/tier-list">← Back to tier list</Link>
+            <Link to={{ pathname: '/tier-list', search }}>← Back to tier list</Link>
 
             <header className="hero-header">
                 {hero.imageUrl ? (
@@ -100,7 +115,7 @@ export default function HeroPage() {
                 <div>
                     <h1>{hero.heroName}</h1>
                     <p className="hero-summary">
-                        <span className={`tier-badge tier-${hero.tier}`}>{hero.tier}</span>{' '}
+                        <span className={`tier-badge tier-${hero.tier}`}>{tierLabel(hero.tier)}</span>{' '}
                         {hero.winRate.toFixed(1)}% win rate · {hero.pickRate.toFixed(1)}% pick rate ·{' '}
                         {hero.games.toLocaleString()} games
                     </p>
@@ -111,13 +126,14 @@ export default function HeroPage() {
                 {SECTIONS.map(({ id, label }) => (
                     <Link
                         key={id}
-                        to={{ hash: `#${id}` }}
+                        to={{ search, hash: `#${id}` }}
                         replace
                         className={active === id ? 'active' : undefined}
                     >
                         {label}
                     </Link>
                 ))}
+                <RankFilter variant="select" />
             </nav>
 
             <section id="builds" className="hero-section">

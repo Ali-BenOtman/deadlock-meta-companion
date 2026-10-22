@@ -1,4 +1,4 @@
-export type Tier = 'S' | 'A' | 'B' | 'C' | 'D'
+export type Tier = 'S' | 'A' | 'B' | 'C' | 'D' | 'NOT_ENOUGH_DATA'
 
 export type Trend = 'RISING' | 'STEADY' | 'FALLING' | 'NOT_ENOUGH_DATA'
 
