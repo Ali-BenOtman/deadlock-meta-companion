@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { apiUrl } from './api'
 import HeroTile from './HeroTile'
 import RankFilter from './RankFilter'
 import { rankNote, tierLabel, useRank } from './rank'
@@ -56,7 +57,7 @@ function TierRows({ minTier, q, sort }: { minTier: number; q: string; sort: Sort
 
   useEffect(() => {
     let cancelled = false
-    fetch(`/api/meta?minTier=${minTier}`)
+    fetch(apiUrl(`/api/meta?minTier=${minTier}`))
       .then((response) => {
         if (!response.ok) {
           throw new Error(`API returned ${response.status}`)
