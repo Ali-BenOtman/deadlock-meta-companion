@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { apiUrl } from './api'
 import type { HeroMeta } from './types'
 
 const FEATURES = [
@@ -55,7 +56,7 @@ export default function LandingPage() {
     const [heroes, setHeroes] = useState<HeroMeta[]>([])
 
     useEffect(() => {
-        fetch('/api/meta')
+        fetch(apiUrl('/api/meta'))
             .then((response) => (response.ok ? (response.json() as Promise<HeroMeta[]>) : []))
             .then(setHeroes)
             .catch(() => setHeroes([]))

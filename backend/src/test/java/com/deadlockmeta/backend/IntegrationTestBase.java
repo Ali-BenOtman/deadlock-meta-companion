@@ -18,7 +18,8 @@ import com.deadlockmeta.backend.stats.StatsCache;
 @TestPropertySource(properties = {
         "POSTGRES_PASSWORD=unused",
         "REDIS_PASSWORD=unused",
-        "app.update.enabled=false"
+        "app.update.enabled=false",
+        "app.cors.allowed-origins=https://frontend.test"
 })
 public abstract class IntegrationTestBase {
 

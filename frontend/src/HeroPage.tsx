@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import { apiUrl } from './api'
 import RankFilter from './RankFilter'
 import { tierLabel, useRank } from './rank'
 import type { BuildStat, HeroMeta, ItemStat } from './types'
@@ -22,7 +23,7 @@ function formatDelta(delta: number): string {
 }
 
 async function getJson<T>(url: string): Promise<T> {
-    const response = await fetch(url)
+    const response = await fetch(apiUrl(url))
     if (!response.ok) {
         throw new Error(`API returned ${response.status}`)
     }
