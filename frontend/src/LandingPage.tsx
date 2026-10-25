@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiUrl } from './api'
+import { usePageTitle } from './usePageTitle'
 import type { HeroMeta } from './types'
 
 const FEATURES = [
@@ -61,6 +62,7 @@ const LIMITS = [
 ]
 
 export default function LandingPage() {
+    usePageTitle()
     const [heroes, setHeroes] = useState<HeroMeta[]>([])
 
     useEffect(() => {
