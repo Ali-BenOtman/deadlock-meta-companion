@@ -35,6 +35,14 @@ const STEPS = [
 
 const LIMITS = [
     {
+        title: 'A sample, not every match',
+        text: 'Matches are collected by the community Deadlock API, not by Valve, so the sample is not guaranteed to represent every player.',
+    },
+    {
+        title: 'Not split by region',
+        text: 'Stats are not broken down by server or region, so a hero that is strong in one region and weak in another looks average here.',
+    },
+    {
         title: 'Item win rates are correlational',
         text: 'Players who are ahead buy items sooner and win more, so a high item win rate is not proof the item is strong.',
     },
@@ -78,7 +86,7 @@ export default function LandingPage() {
                     <p className="eyebrow">Ranked match stats, refreshed every 3 hours</p>
                     <h1 className="landing-title">Know what is winning in Deadlock, today.</h1>
                     <p className="landing-lead">
-                        A hero tier list built from hundreds of thousands of real ranked matches, with the items and
+                        A hero tier list built from a large sample of real ranked matches, with the items and
                         builds that win for every hero.
                     </p>
                     <div className="landing-actions">
@@ -151,8 +159,8 @@ export default function LandingPage() {
             <section id="about" className="landing-section" aria-label="About the data">
                 <h2>Honest about the data</h2>
                 <p className="landing-lead">
-                    Stats come from a community match data lake, not from Valve. A few things to keep in mind when you
-                    read them.
+                    Stats come from the community Deadlock API's match data, not from Valve, and cover a sample of
+                    ranked matches rather than every match played. A few things to keep in mind when you read them.
                 </p>
                 <div className="card-grid">
                     {LIMITS.map((limit) => (

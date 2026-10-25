@@ -14,6 +14,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @Service
 public class AssetsService {
@@ -62,6 +63,11 @@ public class AssetsService {
         } catch (Exception e) {
             log.error("Could not load assets from the Deadlock API", e);
         }
+    }
+
+    @Scheduled(initialDelayString = "${app.assets.refresh-interval:PT6H}", fixedDelayString = "${app.assets.refresh-interval:PT6H}")
+    public void refreshAssets() {
+        loadAssets();
     }
 
     public String heroName(int heroId) {
