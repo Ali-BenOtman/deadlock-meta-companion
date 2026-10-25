@@ -2,6 +2,7 @@ package com.deadlockmeta.backend.stats;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -48,12 +49,16 @@ public class BuildStatsService {
                 (rows, rowNumber) -> {
                     List<Long> itemIds = Arrays.asList((Long[]) rows.getArray("build").getArray());
                     List<String> itemNames = itemIds.stream().map(assetsService::itemName).toList();
+                    List<String> imageUrls = itemIds.stream()
+                            .map(assetsService::itemImageUrl)
+                            .collect(Collectors.toList());
                     return new BuildStat(
                             itemIds,
                             itemNames,
                             rows.getInt("games"),
                             rows.getDouble("win_rate"),
-                            rows.getDouble("win_rate_delta"));
+                            rows.getDouble("win_rate_delta"),
+                            imageUrls);
                 },
                 heroId,
                 minTier,

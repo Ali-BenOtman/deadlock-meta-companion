@@ -540,6 +540,9 @@
   border-radius: 8px;
   background: var(--surface);
   font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .rank-chips {
@@ -777,4 +780,26 @@
   .movers-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.item-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-icon {
+  flex: none;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.item-icon-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
 }

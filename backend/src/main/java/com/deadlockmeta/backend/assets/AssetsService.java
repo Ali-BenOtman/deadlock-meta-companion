@@ -94,6 +94,14 @@ public class AssetsService {
         return item != null ? item.name() : "Unknown item " + itemId;
     }
 
+    public String itemImageUrl(long itemId) {
+        ItemAsset item = items.get(itemId);
+        if (item == null) {
+            return null;
+        }
+        return item.imageWebp() != null ? item.imageWebp() : item.image();
+    }
+
     public boolean isShopItem(long itemId) {
         ItemAsset item = items.get(itemId);
         return item != null && "upgrade".equals(item.type());
