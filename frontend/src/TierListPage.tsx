@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { apiUrl } from './api'
+import { usePageTitle } from './usePageTitle'
 import HeroTile from './HeroTile'
 import RankFilter from './RankFilter'
 import { rankNote, tierLabel, useRank } from './rank'
@@ -138,6 +139,7 @@ function TierRows({ minTier, q, sort }: { minTier: number; q: string; sort: Sort
 }
 
 export default function TierListPage() {
+  usePageTitle('Hero tier list')
   const { minTier } = useRank()
   const { q, sort, setQ, setSort } = useTierTools()
 

@@ -1,11 +1,12 @@
 import { Link, NavLink } from 'react-router-dom'
+import Logo from './Logo'
 
 export default function Nav() {
     return (
         <nav className="nav">
             <Link to="/" className="nav-brand">
-                <span className="nav-logo" aria-hidden="true" />
-                <span className="nav-title">Deadlock Meta</span>
+                <Logo size={30} />
+                <span className="nav-title">Deadlock Meta Companion</span>
             </Link>
             <div className="nav-links">
                 <NavLink to="/" end>

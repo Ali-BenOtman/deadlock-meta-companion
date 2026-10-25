@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { apiUrl } from './api'
+import { usePageTitle } from './usePageTitle'
 import ItemIcon from './ItemIcon'
 import RankFilter from './RankFilter'
 import { tierLabel, useRank } from './rank'
@@ -42,6 +43,7 @@ export default function HeroPage() {
     const [active, setActive] = useState('builds')
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
+    usePageTitle(hero?.heroName)
 
     useEffect(() => {
         let cancelled = false
