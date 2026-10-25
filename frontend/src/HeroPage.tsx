@@ -192,7 +192,7 @@ export default function HeroPage() {
                             <tr key={item.itemId}>
                                 <td>
                                     <span className="item-cell">
-                                        <ItemIcon url={item.imageUrl} name={item.itemName} />
+                                        <ItemIcon url={item.imageUrl} name={item.itemName} size={36} />
                                         {item.itemName}
                                     </span>
                                 </td>

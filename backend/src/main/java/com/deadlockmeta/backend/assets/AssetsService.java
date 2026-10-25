@@ -99,7 +99,13 @@ public class AssetsService {
         if (item == null) {
             return null;
         }
-        return item.imageWebp() != null ? item.imageWebp() : item.image();
+        if (item.shopImageWebp() != null && !item.shopImageWebp().isBlank()) {
+            return item.shopImageWebp();
+        }
+        if (item.imageWebp() != null && !item.imageWebp().isBlank()) {
+            return item.imageWebp();
+        }
+        return item.image();
     }
 
     public boolean isShopItem(long itemId) {
