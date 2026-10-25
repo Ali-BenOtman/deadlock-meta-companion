@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { apiUrl } from './api'
+import ItemIcon from './ItemIcon'
 import RankFilter from './RankFilter'
 import { tierLabel, useRank } from './rank'
 import type { BuildStat, HeroMeta, ItemStat } from './types'
@@ -148,8 +149,9 @@ export default function HeroPage() {
                             <strong>{build.winRate.toFixed(1)}%</strong> ({formatDelta(build.winRateDelta)}) ·{' '}
                             {build.games.toLocaleString()} games
                             <div className="build-items">
-                                {build.itemNames.map((name) => (
-                                    <span key={name} className="chip">
+                                {build.itemNames.map((name, index) => (
+                                    <span key={build.itemIds[index]} className="chip">
+                                        <ItemIcon url={build.imageUrls?.[index]} name={name} size={22} />
                                         {name}
                                     </span>
                                 ))}
@@ -188,7 +190,12 @@ export default function HeroPage() {
                     <tbody>
                         {shownItems.map((item) => (
                             <tr key={item.itemId}>
-                                <td>{item.itemName}</td>
+                                <td>
+                                    <span className="item-cell">
+                                        <ItemIcon url={item.imageUrl} name={item.itemName} />
+                                        {item.itemName}
+                                    </span>
+                                </td>
                                 <td>{item.winRate.toFixed(1)}%</td>
                                 <td>{formatDelta(item.winRateDelta)}</td>
                                 <td>{item.buyRate.toFixed(1)}%</td>

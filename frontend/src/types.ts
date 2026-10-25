@@ -23,6 +23,7 @@ export interface ItemStat {
     winRate: number
     winRateDelta: number
     medianBuySeconds: number | null
+    imageUrl?: string | null
 }
 
 export interface BuildStat {
@@ -31,4 +32,5 @@ export interface BuildStat {
     games: number
     winRate: number
     winRateDelta: number
+    imageUrls?: string | null
 }
