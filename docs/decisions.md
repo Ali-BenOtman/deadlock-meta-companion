@@ -197,3 +197,27 @@ Now the refresh builds window_players and window_first_buys once (filtered to th
 and every step reads them. Results are identical (integration tests check exact values);
 the laptop refresh went from 328 s to 164 s. The index on complete_matches was dropped:
 the large hash joins don't use it.
+
+
+## 30. Complete 12-item builds are not shown as a ranking
+Measured on the server (all stored data, about 21 days, including incomplete matches): of Paige's players,
+29% ended a match holding 12 items. Among those 42,568 players there were 39,275 distinct 12-item builds;
+the most repeated build had 129 games and only 7 builds had 30 or more. Warden, a rarely picked hero, had
+12,052 players with 12 items, 11,181 distinct builds, a top build of 26 games and none with 30 or more.
+"Never sold" is stored as NULL in sold_at_s. Exact complete builds therefore cannot be ranked reliably, which
+agrees with decision 15. The site shows starting builds (first six items) and item statistics by purchase-time
+phase instead.
+
+## 31. The data is a sample of ranked matches, not split by region
+The match data comes from the community Deadlock API, which collects matches from players' own match histories rather than from Valve. 
+It is a sample, not every match, and the pipeline reads no region or server column. 
+The site says so on the landing page.
+
+## 32. The frontend is a separate Vercel deployment; the API allows only its address (CORS)
+The frontend is a static single-page app on Vercel (root directory frontend), redeployed on every merge to
+main. It reaches the API through VITE_API_URL, which is empty locally so the Vite dev proxy still works.
+The backend allows cross-origin GET on /api/** only for origins in app.cors.allowed-origins (set through
+APP_CORS_ALLOWED_ORIGINS in infra/.env; empty means CORS is off). Two integration tests check it: the allowed
+origin gets the header, any other origin gets 403. Requests without an Origin header (curl, the uptime
+monitor, the dev proxy) are unaffected. vercel.json rewrites every path to index.html so refreshing
+/hero/84 works. Only the production address is allowed, so preview deployments show the page without data.

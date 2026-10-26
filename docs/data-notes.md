@@ -134,3 +134,8 @@ Hourly Parquet exports: https://deadlock-api.com/data-dumps
   item stats 54.8 s, build stats 41.8 s, total 163.6 s -> 2.0x faster
 - Identical output row counts (473 hero, 68,882 item, 916,510 build rows);
   integration tests (exact expected values) unchanged and green
+- Server after the change: window first buys 184.1 s, item stats 207.7 s (was 930.3 s),
+  build stats 153.4 s, total refresh 555.6 s (was 1,291.5 s) -> 2.3x faster;
+  a full scheduled update with 2 new files now takes 615 s (was 1,558 s).
+
+  

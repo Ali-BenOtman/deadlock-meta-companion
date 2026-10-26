@@ -8,5 +8,8 @@ public record ItemAsset(
         long id,
         @JsonProperty("class_name") String className,
         String name,
-        String type) {
+        String type,
+        String image,
+        @JsonProperty("image_webp") String imageWebp,
+        @JsonProperty("shop_image_webp") String shopImageWebp) {
 }

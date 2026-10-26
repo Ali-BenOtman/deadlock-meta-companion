@@ -14,6 +14,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @Service
 public class AssetsService {
@@ -64,9 +65,22 @@ public class AssetsService {
         }
     }
 
+    @Scheduled(initialDelayString = "${app.assets.refresh-interval:PT6H}", fixedDelayString = "${app.assets.refresh-interval:PT6H}")
+    public void refreshAssets() {
+        loadAssets();
+    }
+
     public String heroName(int heroId) {
         HeroAsset hero = heroes.get(heroId);
         return hero != null ? hero.name() : "Unknown hero " + heroId;
+    }
+
+    public String heroImageUrl(int heroId) {
+        HeroAsset hero = heroes.get(heroId);
+        if (hero == null || hero.images() == null) {
+            return null;
+        }
+        return hero.images().iconSmallWebp();
     }
 
     public boolean isKnownHero(int heroId) {
@@ -78,6 +92,20 @@ public class AssetsService {
     public String itemName(long itemId) {
         ItemAsset item = items.get(itemId);
         return item != null ? item.name() : "Unknown item " + itemId;
+    }
+
+    public String itemImageUrl(long itemId) {
+        ItemAsset item = items.get(itemId);
+        if (item == null) {
+            return null;
+        }
+        if (item.shopImageWebp() != null && !item.shopImageWebp().isBlank()) {
+            return item.shopImageWebp();
+        }
+        if (item.imageWebp() != null && !item.imageWebp().isBlank()) {
+            return item.imageWebp();
+        }
+        return item.image();
     }
 
     public boolean isShopItem(long itemId) {

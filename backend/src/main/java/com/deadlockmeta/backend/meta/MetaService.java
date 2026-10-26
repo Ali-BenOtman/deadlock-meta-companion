@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import com.deadlockmeta.backend.assets.AssetsService;
 import com.deadlockmeta.backend.stats.HeroStatsService;
 
 @Service
@@ -14,10 +15,13 @@ public class MetaService {
 
     private final HeroStatsService heroStatsService;
     private final HeroTrendService heroTrendService;
+    private final AssetsService assetsService;
 
-    public MetaService(HeroStatsService heroStatsService, HeroTrendService heroTrendService) {
+    public MetaService(HeroStatsService heroStatsService, HeroTrendService heroTrendService,
+            AssetsService assetsService) {
         this.heroStatsService = heroStatsService;
         this.heroTrendService = heroTrendService;
+        this.assetsService = assetsService;
     }
 
     @Cacheable("meta")
@@ -49,7 +53,8 @@ public class MetaService {
                             hero.pickRate(),
                             hero.games(),
                             trend,
-                            change);
+                            change,
+                            assetsService.heroImageUrl(hero.heroId()));
                 })
                 .sorted(Comparator
                         .comparing((HeroTier hero) -> hero.tier() == Tier.NOT_ENOUGH_DATA)
