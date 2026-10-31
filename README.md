@@ -149,7 +149,7 @@ I would rather state these than have them found:
 
 ## Data and disclaimer
 
-Match data comes from the community [Deadlock API](https://deadlock-api.com) data lake. This project is not affiliated with or endorsed by Valve. *Deadlock* and its heroes, items and images belong to Valve.
+Match data comes from the community [Deadlock API](https://deadlock-api.com) data lake. This project is completely not affiliated with or endorsed by Valve. *Deadlock* and its heroes, items and images belong to Valve.
 
 ## Project layout
 
