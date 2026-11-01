@@ -13,7 +13,7 @@ I built this to learn how to run a small, data-heavy backend end to end: pulling
 
 - **Tier list.** Every hero ranked S to D by smoothed win rate, with weekly trend arrows, a rank filter, search, sorting and a "biggest movers" strip.
 - **Hero pages.** Win rate, pick rate and games, the most-played starting builds, and the items with the best win rate against the hero's own average, with the median time players buy them.
-- **Rank filter.** Every number can be limited to a minimum rank, from Obscurus to Eternus.
+- **Rank filter.** Every number can be limited to a minimum rank, from Obscurus to Eternus (lowest to highest rank).
 - **Automatic updates.** New ranked matches are collected every three hours and every statistic is recalculated.
 
 ## How it works
