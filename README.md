@@ -4,8 +4,8 @@
 
 A hero tier list, win rates and item stats for Valve's *Deadlock*, built from a sample of real ranked matches and refreshed every three hours.
 
-**Live site:** https://deadlock-meta-companion.vercel.app
-**API example:** https://207-180-227-65.sslip.io/api/meta
+- **Live site:** https://deadlock-meta-companion.vercel.app
+- **API example:** https://207-180-227-65.sslip.io/api/meta
 
 I built this to learn how to run a small, data-heavy backend end to end: pulling bulk data from a public source, loading it safely, turning tens of millions of rows into fast answers, and running it on a real server. The interesting parts are the data pipeline, the precomputed statistics and the measured performance work. The decisions behind them are written down in [`docs/decisions.md`](docs/decisions.md).
 
@@ -19,16 +19,16 @@ I built this to learn how to run a small, data-heavy backend end to end: pulling
 ## How it works
 
 ```mermaid
-flowchart LR
-    lake[(Deadlock API data lake<br/>Parquet files over HTTPS)] -->|DuckDB reads 15 of 157 columns| extract[Extraction]
-    sched[Scheduler every 3 hours] --> extract
+flowchart TD
+    lake[(Deadlock API data lake<br/>Parquet files over HTTPS)] --> extract[Extraction<br/>DuckDB reads 15 of 157 columns]
+    sched[Scheduler, every 3 hours] --> extract
     extract --> ingest[Idempotent ingestion]
     ingest --> pg[(PostgreSQL<br/>matches, players, purchases)]
     pg --> refresh[Stats refresh]
     refresh --> summary[(Summary tables)]
     summary --> api[Spring Boot REST API]
     redis[(Redis cache)] <--> api
-    api --> caddy[Caddy<br/>automatic HTTPS]
+    api --> caddy[Caddy, automatic HTTPS]
     caddy --> web[React app on Vercel]
 ```
 
