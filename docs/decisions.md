@@ -178,7 +178,7 @@ Flyway builds the schema from scratch on every run. AssetsService is mocked so t
 Test data is generated with DuckDB (TestData) with known outcomes, so expected stats can be computed by hand.
 Covered: ingestion idempotency, refresh + meta/items/builds numbers and rank filtering, retention (deletes old,
 keeps recent), security (dev endpoints 404 without profile, unknown hero 404, invalid minTier 400).
-20 tests in ~24 s. GitHub Actions runs them plus a Docker build on every push to main and every PR;
+22 tests in ~24 s. GitHub Actions runs them plus a Docker build on every push to main and every PR;
 Dependabot proposes weekly updates for Maven, Docker and Actions.
 
 ## 28. Caddy in front, memory limits
