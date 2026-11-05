@@ -53,6 +53,7 @@ These are numbers I measured while building it, not estimates. Details are in [`
 | Database size after the first retention run | 15 GB | 8.2 GB (deleted 140,304 old matches in 51 s, then `VACUUM FULL`) |
 | Ingestion speed | | about 5,600 rows per second with batched inserts |
 | Full data update on the server | | about 8 to 24 minutes, varying with the shared CPU and growing with the data |
+| Database backup and restore | | 18 GB database dumps to about 980 MB in about 4 minutes; a test restore took under 16 minutes |
 | Backend test suite | | 26 tests in about 25 seconds |
 
 ## Key design decisions
@@ -131,7 +132,7 @@ cd backend
 
 ## Deployment
 
-The backend runs as four containers (PostgreSQL, Redis, the Spring Boot app and Caddy) with Docker Compose on a single VPS, with memory limits per container. The frontend is a static build on Vercel and redeploys on every merge to `main`. Backend deploys are manual: pull, rebuild the backend container, recreate Redis. An external monitor checks `/actuator/health`.
+The backend runs as four containers (PostgreSQL, Redis, the Spring Boot app and Caddy) with Docker Compose on a single VPS, with memory limits per container. The frontend is a static build on Vercel and redeploys on every merge to `main`. Backend deploys are manual: pull, rebuild the backend container, recreate Redis. An external monitor checks `/actuator/health`. A nightly backup keeps the newest three database dumps on the server; see [`docs/backup.md`](docs/backup.md).
 
 ## Limitations
 
@@ -144,7 +145,7 @@ I would rather state these than have them found:
 - **Tiers are measured against 50%,** not against the other heroes, and trends need at least 500 games in each of the last two weeks.
 - **Not patch-aware.** The 14-day window can span more than one game patch.
 - **Ranked only.**
-- **Single server.** There is one VPS and no automated backups yet, although the database can be rebuilt from the data lake.
+- **Single server.** There is one VPS. A nightly backup is kept on the same server and a restore was tested, but there is no copy off the server yet.
 - **Cache format.** Redis stores Java-serialised objects, so changing a cached class needs a cache flush. JSON would be more robust.
 - **Refresh time grows with data.** The refresh recomputes everything; an incremental refresh would be the next step if it gets slow.
 

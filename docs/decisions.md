@@ -232,3 +232,13 @@ working while the backend is deployed by hand. A versioned /api/v1 with metadata
 considered and left for later. refreshed_at is now written with clock_timestamp() instead of now(): now()
 is the start of the transaction, so a refresh that takes up to about 20 minutes would have reported a time
 that much too early. Four integration tests cover the endpoint.
+
+## 34. Nightly pg_dump backups, kept on the server, restore tested
+infra/backup.sh runs pg_dump in the custom compressed format (about 980 MB for an 18 GB database, about
+4 minutes) once a night and keeps the newest three copies. The dump goes to a temporary file that is
+renamed only after pg_restore --list can read it, so a failed run never replaces a good backup. A restore
+into a separate throwaway container (1.5 GB memory, 2 cores) took under 16 minutes and reproduced the row
+counts of the four main tables and all 14 indexes. The schedule is a cron line on the server, written down
+in docs/backup.md. Copies stay on the same server, so there is still no protection against losing it; an
+off-server copy was left out for now. Rebuilding from the data lake was not treated as a substitute: it
+depends on the public partitions still existing and would take several hours.
