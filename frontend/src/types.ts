@@ -34,3 +34,10 @@ export interface BuildStat {
     winRateDelta: number
     imageUrls?: string | null
 }
+
+export interface DataStatus {
+    refreshedAt: string | null
+    windowStart: string | null
+    windowEnd: string | null
+    matchesUsed: number
+}
