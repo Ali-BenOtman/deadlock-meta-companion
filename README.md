@@ -53,7 +53,7 @@ These are numbers I measured while building it, not estimates. Details are in [`
 | Database size after the first retention run | 15 GB | 8.2 GB (deleted 140,304 old matches in 51 s, then `VACUUM FULL`) |
 | Ingestion speed | | about 5,600 rows per second with batched inserts |
 | Full data update on the server | | about 8 to 16 minutes, varying with the shared CPU |
-| Backend test suite | | 22 tests in about 25 seconds |
+| Backend test suite | | 26 tests in about 25 seconds |
 
 ## Key design decisions
 
@@ -78,6 +78,7 @@ All endpoints are `GET`, read-only and need no authentication. `minTier` is a ra
 | `/api/heroes/stats?minTier=` | Per-hero stats |
 | `/api/heroes/{id}/items?minTier=` | Items for a hero: buyers, buy rate, win rate, difference from the hero average, median buy time |
 | `/api/heroes/{id}/builds?minTier=` | The most-played first six items (at least 30 games) with win rate |
+| `/api/status?minTier=` | When the statistics were last refreshed, the period they cover and how many matches they are based on |
 | `/actuator/health` | Health check |
 
 An invalid `minTier` returns 400, and an unknown hero returns 404 before the cache or database is touched.
@@ -93,7 +94,7 @@ An invalid `minTier` returns 400, and an unknown hero returns 404 before the cac
 
 ## Testing and CI
 
-- 22 tests: 9 unit tests for the tier and trend rules, and 13 integration tests that start real PostgreSQL 17 and Redis 7.4 containers with Testcontainers. Flyway builds the schema from scratch on every run, and test data is generated with DuckDB with known outcomes, so expected values can be worked out by hand.
+- 26 tests: 9 unit tests for the tier and trend rules, and 17 integration tests that start real PostgreSQL 17 and Redis 7.4 containers with Testcontainers. Flyway builds the schema from scratch on every run, and test data is generated with DuckDB with known outcomes, so expected values can be worked out by hand.
 - GitHub Actions runs the backend tests and a Docker build, and a separate frontend job runs lint and the production build. Both are required checks on `main`, and Dependabot keeps Maven, Docker, Actions and npm up to date.
 
 ## Run it locally

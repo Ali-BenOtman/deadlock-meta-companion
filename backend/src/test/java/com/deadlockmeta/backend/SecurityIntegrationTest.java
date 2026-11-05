@@ -2,6 +2,9 @@ package com.deadlockmeta.backend;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import java.util.Map;
+import org.springframework.core.ParameterizedTypeReference;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -59,5 +62,22 @@ class SecurityIntegrationTest extends IntegrationTestBase {
                         .header("Origin", "https://evil.example")
                         .retrieve()
                         .toBodilessEntity());
+    }
+
+    @Test
+    void statusWorksOnEmptyDatabase() {
+        Map<String, Object> status = api().get().uri("/api/status").retrieve()
+                .body(new ParameterizedTypeReference<>() {
+                });
+        assertEquals(0, ((Number) status.get("matchesUsed")).intValue());
+        assertNull(status.get("refreshedAt"));
+        assertNull(status.get("windowStart"));
+        assertNull(status.get("windowEnd"));
+    }
+
+    @Test
+    void invalidMinTierOnStatusReturns400() {
+        assertThrows(HttpClientErrorException.BadRequest.class,
+                () -> api().get().uri("/api/status?minTier=50").retrieve().toBodilessEntity());
     }
 }

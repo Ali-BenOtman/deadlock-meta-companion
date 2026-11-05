@@ -8,6 +8,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -95,7 +97,31 @@ class StatsIntegrationTest extends IntegrationTestBase {
         assertEquals(100.0, number(build, "winRate"), 0.001);
     }
 
+    @Test
+    void statusDescribesTheLastRefresh() {
+        Map<String, Object> status = getMap("/api/status");
+        assertEquals(100, number(status, "matchesUsed"), 0.001);
+
+        Instant start = Instant.parse((String) status.get("windowStart"));
+        Instant end = Instant.parse((String) status.get("windowEnd"));
+        assertEquals(14, Duration.between(start, end).toDays());
+
+        Instant refreshed = Instant.parse((String) status.get("refreshedAt"));
+        assertTrue(Duration.between(refreshed, Instant.now()).abs().toMinutes() < 10);
+    }
+
+    @Test
+    void statusMatchCountFollowsTheRankFilter() {
+        assertEquals(100, number(getMap("/api/status?minTier=8"), "matchesUsed"), 0.001);
+        assertEquals(0, number(getMap("/api/status?minTier=9"), "matchesUsed"), 0.001);
+    }
+
     private List<Map<String, Object>> getList(String uri) {
+        return api().get().uri(uri).retrieve().body(new ParameterizedTypeReference<>() {
+        });
+    }
+
+    private Map<String, Object> getMap(String uri) {
         return api().get().uri(uri).retrieve().body(new ParameterizedTypeReference<>() {
         });
     }
