@@ -178,7 +178,7 @@ Flyway builds the schema from scratch on every run. AssetsService is mocked so t
 Test data is generated with DuckDB (TestData) with known outcomes, so expected stats can be computed by hand.
 Covered: ingestion idempotency, refresh + meta/items/builds numbers and rank filtering, retention (deletes old,
 keeps recent), security (dev endpoints 404 without profile, unknown hero 404, invalid minTier 400).
-22 tests in ~24 s. GitHub Actions runs them plus a Docker build on every push to main and every PR;
+26 tests in ~24 s. GitHub Actions runs them plus a Docker build on every push to main and every PR;
 Dependabot proposes weekly updates for Maven, Docker and Actions.
 
 ## 28. Caddy in front, memory limits
@@ -221,3 +221,14 @@ APP_CORS_ALLOWED_ORIGINS in infra/.env; empty means CORS is off). Two integratio
 origin gets the header, any other origin gets 403. Requests without an Origin header (curl, the uptime
 monitor, the dev proxy) are unaffected. vercel.json rewrites every path to index.html so refreshing
 /hero/84 works. Only the production address is allowed, so preview deployments show the page without data.
+
+## 33. A status endpoint reports how fresh and how large the data is
+GET /api/status?minTier= returns refreshedAt, windowStart, windowEnd and matchesUsed, read from the
+stats_refresh and tier_match_totals tables. matchesUsed follows the rank filter, so it matches the numbers
+on screen. Before the first refresh it returns no timestamps and 0 matches. It is not cached: both tables
+are tiny, so reading them directly means the answer is never older than the last committed refresh.
+It is a separate endpoint and not a wrapper around the existing responses, so the live frontend keeps
+working while the backend is deployed by hand. A versioned /api/v1 with metadata in every response was
+considered and left for later. refreshed_at is now written with clock_timestamp() instead of now(): now()
+is the start of the transaction, so a refresh that takes up to about 20 minutes would have reported a time
+that much too early. Four integration tests cover the endpoint.
