@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { apiUrl } from './api'
 import { usePageTitle } from './usePageTitle'
 import HeroTile from './HeroTile'
+import DataFreshness from './DataFreshness'
 import RankFilter from './RankFilter'
 import { rankNote, tierLabel, useRank } from './rank'
 import { SORTS, biggestMovers, sortHeroes, useTierTools } from './tierTools'
@@ -147,6 +148,7 @@ export default function TierListPage() {
     <main className="page">
       <h1>Hero tier list</h1>
       <p className="subtitle">Hero tiers from the last 14 days of ranked matches</p>
+      <DataFreshness />
       <div className="tier-controls">
         <RankFilter variant="select" />
         <label className="search-box">
