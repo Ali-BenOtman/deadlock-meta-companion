@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { apiUrl } from './api'
 import { usePageTitle } from './usePageTitle'
 import ItemIcon from './ItemIcon'
+import DataFreshness from './DataFreshness'
 import RankFilter from './RankFilter'
 import { tierLabel, useRank } from './rank'
 import type { BuildStat, HeroMeta, ItemStat } from './types'
@@ -123,6 +124,7 @@ export default function HeroPage() {
                         {hero.winRate.toFixed(1)}% win rate · {hero.pickRate.toFixed(1)}% pick rate ·{' '}
                         {hero.games.toLocaleString()} games
                     </p>
+                    <DataFreshness />
                 </div>
             </header>
 
