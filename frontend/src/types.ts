@@ -41,3 +41,12 @@ export interface DataStatus {
     windowEnd: string | null
     matchesUsed: number
 }
+
+export interface HeroStat {
+    heroId: number
+    heroName: string
+    games: number
+    wins: number
+    winRate: number
+    pickRate: number
+}
