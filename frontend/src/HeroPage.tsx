@@ -6,7 +6,7 @@ import ItemIcon from './ItemIcon'
 import DataFreshness from './DataFreshness'
 import RankFilter from './RankFilter'
 import { tierLabel, useRank } from './rank'
-import type { BuildStat, HeroMeta, ItemStat } from './types'
+import type { BuildStat, HeroMeta, HeroStat, ItemStat } from './types'
 
 const SECTIONS = [
     { id: 'builds', label: 'Builds' },
@@ -40,6 +40,7 @@ export default function HeroPage() {
     const [hero, setHero] = useState<HeroMeta | null>(null)
     const [items, setItems] = useState<ItemStat[]>([])
     const [builds, setBuilds] = useState<BuildStat[]>([])
+    const [wins, setWins] = useState<number | null>(null)
     const [minBuyRate, setMinBuyRate] = useState(5)
     const [active, setActive] = useState('builds')
     const [error, setError] = useState<string | null>(null)
@@ -52,14 +53,16 @@ export default function HeroPage() {
             .then(async (heroes) => {
                 const found = heroes.find((h) => String(h.heroId) === heroId)
                 if (!found) return
-                const [itemData, buildData] = await Promise.all([
+                const [itemData, buildData, statData] = await Promise.all([
                     getJson<ItemStat[]>(`/api/heroes/${heroId}/items?minTier=${minTier}`),
                     getJson<BuildStat[]>(`/api/heroes/${heroId}/builds?minTier=${minTier}`),
+                    getJson<HeroStat[]>(`/api/heroes/stats?minTier=${minTier}`).catch(() => null),
                 ])
                 if (cancelled) return
                 setHero(found)
                 setItems(itemData)
                 setBuilds(buildData)
+                setWins(statData?.find((s) => String(s.heroId) === heroId)?.wins ?? null)
             })
             .catch((e: Error) => {
                 if (!cancelled) setError(e.message)
@@ -123,6 +126,11 @@ export default function HeroPage() {
                         <span className={`tier-badge tier-${hero.tier}`}>{tierLabel(hero.tier)}</span>{' '}
                         {hero.winRate.toFixed(1)}% win rate · {hero.pickRate.toFixed(1)}% pick rate ·{' '}
                         {hero.games.toLocaleString()} games
+                        {wins !== null && (
+                            <span className="hero-record">
+                                ({wins.toLocaleString()} wins, {(hero.games - wins).toLocaleString()} losses)
+                            </span>
+                        )}
                     </p>
                     <DataFreshness />
                 </div>
