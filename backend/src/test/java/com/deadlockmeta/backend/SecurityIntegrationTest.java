@@ -80,4 +80,16 @@ class SecurityIntegrationTest extends IntegrationTestBase {
         assertThrows(HttpClientErrorException.BadRequest.class,
                 () -> api().get().uri("/api/status?minTier=50").retrieve().toBodilessEntity());
     }
+
+    @Test
+    void unknownHeroOnDailyReturns404() {
+        assertThrows(HttpClientErrorException.NotFound.class,
+                () -> api().get().uri("/api/heroes/999999/daily").retrieve().toBodilessEntity());
+    }
+
+    @Test
+    void invalidMinTierOnDailyReturns400() {
+        assertThrows(HttpClientErrorException.BadRequest.class,
+                () -> api().get().uri("/api/heroes/1/daily?minTier=50").retrieve().toBodilessEntity());
+    }
 }

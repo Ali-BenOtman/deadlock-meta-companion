@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -114,6 +115,36 @@ class StatsIntegrationTest extends IntegrationTestBase {
     void statusMatchCountFollowsTheRankFilter() {
         assertEquals(100, number(getMap("/api/status?minTier=8"), "matchesUsed"), 0.001);
         assertEquals(0, number(getMap("/api/status?minTier=9"), "matchesUsed"), 0.001);
+    }
+
+    @Test
+    void dailyStatsGiveOneRowPerDayForAHero() {
+        List<Map<String, Object>> days = getList("/api/heroes/1/daily");
+        assertEquals(5, days.size());
+
+        long games = 0;
+        LocalDate previous = null;
+        for (Map<String, Object> day : days) {
+            LocalDate date = LocalDate.parse((String) day.get("day"));
+            if (previous != null) {
+                assertTrue(date.isAfter(previous));
+            }
+            previous = date;
+            games += ((Number) day.get("games")).longValue();
+            assertEquals(number(day, "games"), number(day, "wins"), 0.001);
+            assertEquals(100.0, number(day, "winRate"), 0.001);
+        }
+        assertEquals(100, games);
+    }
+
+    @Test
+    void dailyStatsForALosingHeroAndAFilteredRank() {
+        List<Map<String, Object>> losing = getList("/api/heroes/7/daily");
+        assertEquals(5, losing.size());
+        assertEquals(0.0, number(losing.get(0), "wins"), 0.001);
+        assertEquals(0.0, number(losing.get(0), "winRate"), 0.001);
+
+        assertTrue(getList("/api/heroes/1/daily?minTier=9").isEmpty());
     }
 
     private List<Map<String, Object>> getList(String uri) {
