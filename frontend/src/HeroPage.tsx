@@ -4,9 +4,10 @@ import { apiUrl } from './api'
 import { usePageTitle } from './usePageTitle'
 import ItemIcon from './ItemIcon'
 import DataFreshness from './DataFreshness'
+import WinRateChart from './WinRateChart'
 import RankFilter from './RankFilter'
 import { tierLabel, useRank } from './rank'
-import type { BuildStat, HeroMeta, HeroStat, ItemStat } from './types'
+import type { BuildStat, DailyStat, HeroMeta, HeroStat, ItemStat } from './types'
 
 const SECTIONS = [
     { id: 'builds', label: 'Builds' },
@@ -41,6 +42,7 @@ export default function HeroPage() {
     const [items, setItems] = useState<ItemStat[]>([])
     const [builds, setBuilds] = useState<BuildStat[]>([])
     const [wins, setWins] = useState<number | null>(null)
+    const [daily, setDaily] = useState<DailyStat[]>([])
     const [minBuyRate, setMinBuyRate] = useState(5)
     const [active, setActive] = useState('builds')
     const [error, setError] = useState<string | null>(null)
@@ -53,16 +55,18 @@ export default function HeroPage() {
             .then(async (heroes) => {
                 const found = heroes.find((h) => String(h.heroId) === heroId)
                 if (!found) return
-                const [itemData, buildData, statData] = await Promise.all([
+                const [itemData, buildData, statData, dailyData] = await Promise.all([
                     getJson<ItemStat[]>(`/api/heroes/${heroId}/items?minTier=${minTier}`),
                     getJson<BuildStat[]>(`/api/heroes/${heroId}/builds?minTier=${minTier}`),
                     getJson<HeroStat[]>(`/api/heroes/stats?minTier=${minTier}`).catch(() => null),
+                    getJson<DailyStat[]>(`/api/heroes/${heroId}/daily?minTier=${minTier}`).catch(() => []),
                 ])
                 if (cancelled) return
                 setHero(found)
                 setItems(itemData)
                 setBuilds(buildData)
                 setWins(statData?.find((s) => String(s.heroId) === heroId)?.wins ?? null)
+                setDaily(dailyData)
             })
             .catch((e: Error) => {
                 if (!cancelled) setError(e.message)
@@ -149,6 +153,13 @@ export default function HeroPage() {
                 ))}
                 <RankFilter variant="select" />
             </nav>
+
+            {daily.length >= 2 && (
+                <section className="hero-section">
+                    <h2>Win rate over time</h2>
+                    <WinRateChart days={daily} />
+                </section>
+            )}
 
             <section id="builds" className="hero-section">
                 <h2>Starting builds</h2>
