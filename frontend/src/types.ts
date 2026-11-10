@@ -50,3 +50,10 @@ export interface HeroStat {
     winRate: number
     pickRate: number
 }
+
+export interface DailyStat {
+    day: string
+    games: number
+    wins: number
+    winRate: number
+}

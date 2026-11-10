@@ -807,3 +807,66 @@
 .hero-record {
   margin-left: 0.35em;
 }
+
+.win-chart {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  overflow: visible;
+}
+
+.win-chart text {
+  fill: var(--muted);
+  font-family: var(--sans);
+  font-size: 11px;
+}
+
+.win-chart .grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.win-chart .even {
+  stroke: var(--muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.win-chart .line {
+  stroke: var(--accent);
+  stroke-width: 2;
+  fill: none;
+}
+
+.win-chart .line.faint {
+  stroke-opacity: 0.45;
+  stroke-dasharray: 4 3;
+}
+
+.win-chart .dot {
+  fill: var(--accent);
+}
+
+.win-chart .dot.faint {
+  fill: var(--bg);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.win-chart .tip {
+  pointer-events: none;
+}
+
+.win-chart .tip-box {
+  fill: var(--surface);
+  stroke: var(--border);
+}
+
+.win-chart .tip-text {
+  fill: var(--text);
+}
+
+.win-chart .hit {
+  outline: none;
+}
