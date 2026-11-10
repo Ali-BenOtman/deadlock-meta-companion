@@ -16,6 +16,12 @@ I built this to learn how to run a small, data-heavy backend end to end: pulling
 - **Rank filter.** Every number can be limited to a minimum rank, from Obscurus to Eternus (lowest to highest rank).
 - **Automatic updates.** New ranked matches are collected every three hours and every statistic is recalculated.
 
+## Screenshots
+
+![Hero tier list with the rank filter and the last-refreshed line](docs/images/tier-list.png)
+
+![A hero page with wins and losses and the win rate over time chart](docs/images/hero-page.png)
+
 ## How it works
 
 ```mermaid
