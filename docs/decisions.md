@@ -178,7 +178,7 @@ Flyway builds the schema from scratch on every run. AssetsService is mocked so t
 Test data is generated with DuckDB (TestData) with known outcomes, so expected stats can be computed by hand.
 Covered: ingestion idempotency, refresh + meta/items/builds numbers and rank filtering, retention (deletes old,
 keeps recent), security (dev endpoints 404 without profile, unknown hero 404, invalid minTier 400).
-26 tests in ~24 s. GitHub Actions runs them plus a Docker build on every push to main and every PR;
+30 tests in ~24 s. GitHub Actions runs them plus a Docker build on every push to main and every PR;
 Dependabot proposes weekly updates for Maven, Docker and Actions.
 
 ## 28. Caddy in front, memory limits
@@ -242,3 +242,5 @@ counts of the four main tables and all 14 indexes. The schedule is a cron line o
 in docs/backup.md. Copies stay on the same server, so there is still no protection against losing it; an
 off-server copy was left out for now. Rebuilding from the data lake was not treated as a substitute: it
 depends on the public partitions still existing and would take several hours.
+## 35. A daily endpoint gives the chart its data, read straight from hero_daily_stats
+GET /api/heroes/{id}/daily?minTier= returns one row per day in the statistics window for a hero: the day, games, wins and win rate, summed over the ranks at or above minTier. It reads hero_daily_stats, which the refresh already fills for the weekly trend, so it needs no migration. Like the status endpoint it is not cached: the table is tiny, so the answer is never older than the last committed refresh and the cache eviction list stays unchanged. It uses the same minTier check (400) and unknown-hero check (404) as the item and build endpoints. Days with no matches are simply missing from the result, not zero. Four integration tests cover it; they check the number of days, the order, the totals and the errors but not the exact games per day, which depends on the machine's time zone.
