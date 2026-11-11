@@ -12,7 +12,7 @@ I built this to learn how to run a small, data-heavy backend end to end: pulling
 ## What it does
 
 - **Tier list.** Every hero ranked S to D by smoothed win rate, with weekly trend arrows, a rank filter, search, sorting and a "biggest movers" strip.
-- **Hero pages.** Win rate, pick rate and games, the most-played starting builds, and the items with the best win rate against the hero's own average, with the median time players buy them.
+- **Hero pages.** Win rate, pick rate, wins and losses, quick answers (a core build in buying order and the most-bought items for the early, mid and late game), a daily win rate chart, the most-played starting builds, and a sortable items table with the win rate against the hero's own average, the buy rate and the number of buyers. The items can be split by when players first bought them: early (0 to 10 minutes), mid (10 to 20) or late (20 and later).
 - **Rank filter.** Every number can be limited to a minimum rank, from Obscurus to Eternus (lowest to highest rank).
 - **Automatic updates.** New ranked matches are collected every three hours and every statistic is recalculated.
 
@@ -58,7 +58,7 @@ These are numbers I measured while building it, not estimates. Details are in [`
 | Stats refresh, laptop (shared window tables) | 328 s | 164 s, identical results |
 | Database size after the first retention run | 15 GB | 8.2 GB (deleted 140,304 old matches in 51 s, then `VACUUM FULL`) |
 | Ingestion speed | | about 5,600 rows per second with batched inserts |
-| Full data update on the server | | about 8 to 24 minutes, varying with the shared CPU and growing with the data |
+| Full data update on the server | | about 17 to 34 minutes, varying with the shared CPU and growing with the data |
 | Database backup and restore | | 18 GB database dumps to about 980 MB in about 4 minutes; a test restore took under 16 minutes |
 | Backend test suite | | 34 tests in about 36 seconds |
 

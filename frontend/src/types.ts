@@ -57,3 +57,16 @@ export interface DailyStat {
     wins: number
     winRate: number
 }
+
+export type Phase = 'EARLY' | 'MID' | 'LATE'
+
+export interface PhaseItemStat {
+    phase: Phase
+    itemId: number
+    itemName: string
+    buyers: number
+    buyRate: number
+    winRate: number
+    winRateDelta: number
+    imageUrl: string | null
+}

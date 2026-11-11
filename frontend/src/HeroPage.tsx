@@ -3,23 +3,29 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { apiUrl } from './api'
 import { usePageTitle } from './usePageTitle'
 import ItemIcon from './ItemIcon'
+import ItemsTable from './ItemsTable'
+import QuickAnswers from './QuickAnswers'
 import DataFreshness from './DataFreshness'
 import WinRateChart from './WinRateChart'
 import RankFilter from './RankFilter'
 import { tierLabel, useRank } from './rank'
-import type { BuildStat, DailyStat, HeroMeta, HeroStat, ItemStat } from './types'
+import type { BuildStat, DailyStat, HeroMeta, HeroStat, ItemStat, PhaseItemStat } from './types'
 
 const SECTIONS = [
     { id: 'builds', label: 'Builds' },
     { id: 'items', label: 'Items' },
 ]
 
-function formatTime(seconds: number | null): string {
-    if (seconds === null) return 'n/a'
-    const minutes = Math.floor(seconds / 60)
-    const rest = seconds % 60
-    return `${minutes}:${rest.toString().padStart(2, '0')}`
-}
+const VIEWS = [
+    { key: 'ALL', label: 'All' },
+    { key: 'EARLY', label: 'Early (0-10 min)' },
+    { key: 'MID', label: 'Mid (10-20 min)' },
+    { key: 'LATE', label: 'Late (20+ min)' },
+] as const
+
+type View = (typeof VIEWS)[number]['key']
+
+const COLLAPSED_BUILDS = 3
 
 function formatDelta(delta: number): string {
     const sign = delta > 0 ? '+' : ''
@@ -43,7 +49,9 @@ export default function HeroPage() {
     const [builds, setBuilds] = useState<BuildStat[]>([])
     const [wins, setWins] = useState<number | null>(null)
     const [daily, setDaily] = useState<DailyStat[]>([])
-    const [minBuyRate, setMinBuyRate] = useState(5)
+    const [phaseItems, setPhaseItems] = useState<PhaseItemStat[] | null>(null)
+    const [view, setView] = useState<View>('ALL')
+    const [showAllBuilds, setShowAllBuilds] = useState(false)
     const [active, setActive] = useState('builds')
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
@@ -55,11 +63,14 @@ export default function HeroPage() {
             .then(async (heroes) => {
                 const found = heroes.find((h) => String(h.heroId) === heroId)
                 if (!found) return
-                const [itemData, buildData, statData, dailyData] = await Promise.all([
+                const [itemData, buildData, statData, dailyData, phaseData] = await Promise.all([
                     getJson<ItemStat[]>(`/api/heroes/${heroId}/items?minTier=${minTier}`),
                     getJson<BuildStat[]>(`/api/heroes/${heroId}/builds?minTier=${minTier}`),
                     getJson<HeroStat[]>(`/api/heroes/stats?minTier=${minTier}`).catch(() => null),
                     getJson<DailyStat[]>(`/api/heroes/${heroId}/daily?minTier=${minTier}`).catch(() => []),
+                    getJson<PhaseItemStat[]>(`/api/heroes/${heroId}/items/phases?minTier=${minTier}`).catch(
+                        () => null,
+                    ),
                 ])
                 if (cancelled) return
                 setHero(found)
@@ -67,6 +78,7 @@ export default function HeroPage() {
                 setBuilds(buildData)
                 setWins(statData?.find((s) => String(s.heroId) === heroId)?.wins ?? null)
                 setDaily(dailyData)
+                setPhaseItems(phaseData)
             })
             .catch((e: Error) => {
                 if (!cancelled) setError(e.message)
@@ -110,7 +122,12 @@ export default function HeroPage() {
         )
     }
 
-    const shownItems = items.filter((item) => item.buyRate >= minBuyRate).slice(0, 20)
+    // The switch only exists when the phase endpoint answered with data; otherwise the page
+    // shows the overall table exactly as before.
+    const hasPhases = phaseItems !== null && phaseItems.length > 0
+    const activeView: View = hasPhases ? view : 'ALL'
+    const rows = activeView === 'ALL' ? items : (phaseItems ?? []).filter((item) => item.phase === activeView)
+    const shownBuilds = showAllBuilds ? builds : builds.slice(0, COLLAPSED_BUILDS)
 
     return (
         <main className="page">
@@ -154,6 +171,8 @@ export default function HeroPage() {
                 <RankFilter variant="select" />
             </nav>
 
+            <QuickAnswers items={items} phaseItems={phaseItems} />
+
             {daily.length >= 2 && (
                 <section className="hero-section">
                     <h2>Win rate over time</h2>
@@ -164,10 +183,11 @@ export default function HeroPage() {
             <section id="builds" className="hero-section">
                 <h2>Starting builds</h2>
                 <p className="subtitle">
-                    The most-played first six items. The order they were bought in is not tracked.
+                    The most-played first six items. Many of these differ by a single item, and the order they were
+                    bought in is not tracked.
                 </p>
                 <ul className="build-list">
-                    {builds.map((build) => (
+                    {shownBuilds.map((build) => (
                         <li key={build.itemIds.join('-')}>
                             <strong>{build.winRate.toFixed(1)}%</strong> ({formatDelta(build.winRateDelta)}) ·{' '}
                             {build.games.toLocaleString()} games
@@ -182,51 +202,41 @@ export default function HeroPage() {
                         </li>
                     ))}
                 </ul>
+                {builds.length > COLLAPSED_BUILDS && (
+                    <button type="button" className="show-all" onClick={() => setShowAllBuilds(!showAllBuilds)}>
+                        {showAllBuilds ? 'Show fewer' : `Show all ${builds.length} builds`}
+                    </button>
+                )}
             </section>
 
             <section id="items" className="hero-section">
-                <h2>Best items</h2>
+                <h2>Items</h2>
                 <p className="subtitle">
                     Item win rates are correlational: players who are ahead buy items sooner and win more.
                 </p>
-                <label>
-                    Minimum buy rate: {minBuyRate}%{' '}
-                    <input
-                        type="range"
-                        min={0}
-                        max={30}
-                        step={1}
-                        value={minBuyRate}
-                        onChange={(e) => setMinBuyRate(Number(e.target.value))}
-                    />
-                </label>
-                <table className="stats-table">
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Win rate</th>
-                            <th>vs hero avg</th>
-                            <th>Buy rate</th>
-                            <th>Median buy</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {shownItems.map((item) => (
-                            <tr key={item.itemId}>
-                                <td>
-                                    <span className="item-cell">
-                                        <ItemIcon url={item.imageUrl} name={item.itemName} size={36} />
-                                        {item.itemName}
-                                    </span>
-                                </td>
-                                <td>{item.winRate.toFixed(1)}%</td>
-                                <td>{formatDelta(item.winRateDelta)}</td>
-                                <td>{item.buyRate.toFixed(1)}%</td>
-                                <td>{formatTime(item.medianBuySeconds)}</td>
-                            </tr>
+                {hasPhases && (
+                    <div className="rank-chips" role="group" aria-label="Game phase">
+                        <span className="rank-label">First bought</span>
+                        {VIEWS.map((option) => (
+                            <button
+                                key={option.key}
+                                type="button"
+                                className={option.key === activeView ? 'rank-chip active' : 'rank-chip'}
+                                aria-pressed={option.key === activeView}
+                                onClick={() => setView(option.key)}
+                            >
+                                {option.label}
+                            </button>
                         ))}
-                    </tbody>
-                </table>
+                    </div>
+                )}
+                {activeView !== 'ALL' && (
+                    <p className="subtitle">
+                        Items grouped by when players first bought them. Buy rate is the share of this hero's
+                        players who first bought the item in that phase.
+                    </p>
+                )}
+                <ItemsTable key={`${activeView}-${minTier}`} rows={rows} showMedian={activeView === 'ALL'} />
             </section>
         </main>
     )
