@@ -36,14 +36,23 @@ export default function QuickAnswers({
             .slice(0, ITEMS_PER_PHASE),
     })).filter((phase) => phase.top.length > 0)
 
-    if (core.length < 3 && phases.length === 0) return null
+    if (core.length < 3 && phases.length === 0) {
+        return (
+            <div>
+                <h2>Quick answers</h2>
+                <p className="tier-note">
+                    Not enough data at this rank for quick answers. Try a lower rank, or see the Items tab.
+                </p>
+            </div>
+        )
+    }
 
     return (
-        <section className="hero-section">
+        <div>
             <h2>Quick answers</h2>
             <p className="subtitle">
-                What most players buy, from real ranked matches. Popular is not the same as best: the table
-                below shows win rates.
+                What most players buy, from real ranked matches. Popular is not the same as best: the Items tab
+                shows win rates.
             </p>
 
             {core.length >= 3 && (
@@ -94,6 +103,6 @@ export default function QuickAnswers({
                     </ul>
                 </div>
             ))}
-        </section>
+        </div>
     )
 }

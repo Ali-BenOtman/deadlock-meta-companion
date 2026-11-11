@@ -12,7 +12,7 @@ I built this to learn how to run a small, data-heavy backend end to end: pulling
 ## What it does
 
 - **Tier list.** Every hero ranked S to D by smoothed win rate, with weekly trend arrows, a rank filter, search, sorting and a "biggest movers" strip.
-- **Hero pages.** Win rate, pick rate, wins and losses, quick answers (a core build in buying order and the most-bought items for the early, mid and late game), a daily win rate chart, the most-played starting builds, and a sortable items table with the win rate against the hero's own average, the buy rate and the number of buyers. The items can be split by when players first bought them: early (0 to 10 minutes), mid (10 to 20) or late (20 and later).
+- **Hero pages.** A stats strip (tier, win rate, pick rate, games, wins and losses) and four tabs: quick answers (a core build in buying order and the most-bought items for the early, mid and late game), the daily win rate chart, the most-played starting builds, and a sortable items table with the win rate against the hero's own average, the buy rate and the number of buyers. The items can be split by when players first bought them: early (0 to 10 minutes), mid (10 to 20) or late (20 and later).
 - **Rank filter.** Every number can be limited to a minimum rank, from Obscurus to Eternus (lowest to highest rank).
 - **Automatic updates.** New ranked matches are collected every three hours and every statistic is recalculated.
 
@@ -20,7 +20,7 @@ I built this to learn how to run a small, data-heavy backend end to end: pulling
 
 ![Hero tier list with the rank filter and the last-refreshed line](docs/images/tier-list.png)
 
-![A hero page with wins and losses and the win rate over time chart](docs/images/hero-page.png)
+![A hero page with the stats strip, tabs and quick answers](docs/images/hero-page.png)
 
 ## How it works
 

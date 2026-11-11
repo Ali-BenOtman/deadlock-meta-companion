@@ -11,10 +11,14 @@ import RankFilter from './RankFilter'
 import { tierLabel, useRank } from './rank'
 import type { BuildStat, DailyStat, HeroMeta, HeroStat, ItemStat, PhaseItemStat } from './types'
 
-const SECTIONS = [
+const TABS = [
+    { id: 'quick', label: 'Quick answers' },
+    { id: 'win-rate', label: 'Win rate' },
     { id: 'builds', label: 'Builds' },
     { id: 'items', label: 'Items' },
-]
+] as const
+
+type TabId = (typeof TABS)[number]['id']
 
 const VIEWS = [
     { key: 'ALL', label: 'All' },
@@ -42,7 +46,7 @@ async function getJson<T>(url: string): Promise<T> {
 
 export default function HeroPage() {
     const { heroId } = useParams()
-    const { search } = useLocation()
+    const { search, hash } = useLocation()
     const { minTier } = useRank()
     const [hero, setHero] = useState<HeroMeta | null>(null)
     const [items, setItems] = useState<ItemStat[]>([])
@@ -52,7 +56,6 @@ export default function HeroPage() {
     const [phaseItems, setPhaseItems] = useState<PhaseItemStat[] | null>(null)
     const [view, setView] = useState<View>('ALL')
     const [showAllBuilds, setShowAllBuilds] = useState(false)
-    const [active, setActive] = useState('builds')
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     usePageTitle(hero?.heroName)
@@ -91,24 +94,6 @@ export default function HeroPage() {
         }
     }, [heroId, minTier])
 
-    useEffect(() => {
-        if (!hero) return
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const visible = entries
-                    .filter((entry) => entry.isIntersecting)
-                    .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
-                if (visible.length > 0) setActive(visible[0].target.id)
-            },
-            { rootMargin: '-90px 0px -60% 0px' },
-        )
-        SECTIONS.forEach(({ id }) => {
-            const element = document.getElementById(id)
-            if (element) observer.observe(element)
-        })
-        return () => observer.disconnect()
-    }, [hero])
-
     if (loading) return <p className="status">Loading...</p>
     if (error) return <p className="status">Failed to load: {error}</p>
     if (!hero) {
@@ -129,6 +114,12 @@ export default function HeroPage() {
     const rows = activeView === 'ALL' ? items : (phaseItems ?? []).filter((item) => item.phase === activeView)
     const shownBuilds = showAllBuilds ? builds : builds.slice(0, COLLAPSED_BUILDS)
 
+    // The tab lives in the address (#items), so a link opens the right tab. An unknown or
+    // missing tab falls back to Quick answers, and the Win rate tab needs at least two days.
+    const visibleTabs = TABS.filter((tab) => tab.id !== 'win-rate' || daily.length >= 2)
+    const requested = hash.replace('#', '')
+    const activeTab: TabId = visibleTabs.some((tab) => tab.id === requested) ? (requested as TabId) : 'quick'
+
     return (
         <main className="page">
             <Link to={{ pathname: '/tier-list', search }}>← Back to tier list</Link>
@@ -143,27 +134,50 @@ export default function HeroPage() {
                 )}
                 <div>
                     <h1>{hero.heroName}</h1>
-                    <p className="hero-summary">
-                        <span className={`tier-badge tier-${hero.tier}`}>{tierLabel(hero.tier)}</span>{' '}
-                        {hero.winRate.toFixed(1)}% win rate · {hero.pickRate.toFixed(1)}% pick rate ·{' '}
-                        {hero.games.toLocaleString()} games
-                        {wins !== null && (
-                            <span className="hero-record">
-                                ({wins.toLocaleString()} wins, {(hero.games - wins).toLocaleString()} losses)
+                    <div className="stat-strip">
+                        <div className="stat">
+                            <span className="stat-label">Tier</span>
+                            <span className="stat-value">
+                                <span className={`tier-badge tier-${hero.tier}`}>{tierLabel(hero.tier)}</span>
                             </span>
+                        </div>
+                        <div className="stat">
+                            <span className="stat-label">Win rate</span>
+                            <span className="stat-value">{hero.winRate.toFixed(1)}%</span>
+                        </div>
+                        <div className="stat">
+                            <span className="stat-label">Pick rate</span>
+                            <span className="stat-value">{hero.pickRate.toFixed(1)}%</span>
+                        </div>
+                        <div className="stat">
+                            <span className="stat-label">Games</span>
+                            <span className="stat-value">{hero.games.toLocaleString()}</span>
+                        </div>
+                        {wins !== null && (
+                            <>
+                                <div className="stat">
+                                    <span className="stat-label">Wins</span>
+                                    <span className="stat-value">{wins.toLocaleString()}</span>
+                                </div>
+                                <div className="stat">
+                                    <span className="stat-label">Losses</span>
+                                    <span className="stat-value">{(hero.games - wins).toLocaleString()}</span>
+                                </div>
+                            </>
                         )}
-                    </p>
+                    </div>
                     <DataFreshness />
                 </div>
             </header>
 
-            <nav className="section-bar" aria-label="Hero page sections">
-                {SECTIONS.map(({ id, label }) => (
+            <nav className="section-bar" aria-label="Hero page tabs">
+                {visibleTabs.map(({ id, label }) => (
                     <Link
                         key={id}
                         to={{ search, hash: `#${id}` }}
                         replace
-                        className={active === id ? 'active' : undefined}
+                        className={activeTab === id ? 'active' : undefined}
+                        aria-current={activeTab === id ? 'page' : undefined}
                     >
                         {label}
                     </Link>
@@ -171,73 +185,85 @@ export default function HeroPage() {
                 <RankFilter variant="select" />
             </nav>
 
-            <QuickAnswers items={items} phaseItems={phaseItems} />
+            {activeTab === 'quick' && (
+                <section className="hero-card">
+                    <QuickAnswers items={items} phaseItems={phaseItems} />
+                </section>
+            )}
 
-            {daily.length >= 2 && (
-                <section className="hero-section">
+            {activeTab === 'win-rate' && (
+                <section className="hero-card">
                     <h2>Win rate over time</h2>
                     <WinRateChart days={daily} />
                 </section>
             )}
 
-            <section id="builds" className="hero-section">
-                <h2>Starting builds</h2>
-                <p className="subtitle">
-                    The most-played first six items. Many of these differ by a single item, and the order they were
-                    bought in is not tracked.
-                </p>
-                <ul className="build-list">
-                    {shownBuilds.map((build) => (
-                        <li key={build.itemIds.join('-')}>
-                            <strong>{build.winRate.toFixed(1)}%</strong> ({formatDelta(build.winRateDelta)}) ·{' '}
-                            {build.games.toLocaleString()} games
-                            <div className="build-items">
-                                {build.itemNames.map((name, index) => (
-                                    <span key={build.itemIds[index]} className="chip">
-                                        <ItemIcon url={build.imageUrls?.[index]} name={name} size={22} />
-                                        {name}
-                                    </span>
-                                ))}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-                {builds.length > COLLAPSED_BUILDS && (
-                    <button type="button" className="show-all" onClick={() => setShowAllBuilds(!showAllBuilds)}>
-                        {showAllBuilds ? 'Show fewer' : `Show all ${builds.length} builds`}
-                    </button>
-                )}
-            </section>
-
-            <section id="items" className="hero-section">
-                <h2>Items</h2>
-                <p className="subtitle">
-                    Item win rates are correlational: players who are ahead buy items sooner and win more.
-                </p>
-                {hasPhases && (
-                    <div className="rank-chips" role="group" aria-label="Game phase">
-                        <span className="rank-label">First bought</span>
-                        {VIEWS.map((option) => (
-                            <button
-                                key={option.key}
-                                type="button"
-                                className={option.key === activeView ? 'rank-chip active' : 'rank-chip'}
-                                aria-pressed={option.key === activeView}
-                                onClick={() => setView(option.key)}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-                {activeView !== 'ALL' && (
+            {activeTab === 'builds' && (
+                <section className="hero-card">
+                    <h2>Starting builds</h2>
                     <p className="subtitle">
-                        Items grouped by when players first bought them. Buy rate is the share of this hero's
-                        players who first bought the item in that phase.
+                        The most-played first six items. Many of these differ by a single item, and the order they
+                        were bought in is not tracked.
                     </p>
-                )}
-                <ItemsTable key={`${activeView}-${minTier}`} rows={rows} showMedian={activeView === 'ALL'} />
-            </section>
+                    <ul className="build-list">
+                        {shownBuilds.map((build) => (
+                            <li key={build.itemIds.join('-')}>
+                                <strong>{build.winRate.toFixed(1)}%</strong> ({formatDelta(build.winRateDelta)}) ·{' '}
+                                {build.games.toLocaleString()} games
+                                <div className="build-items">
+                                    {build.itemNames.map((name, index) => (
+                                        <span key={build.itemIds[index]} className="chip">
+                                            <ItemIcon url={build.imageUrls?.[index]} name={name} size={22} />
+                                            {name}
+                                        </span>
+                                    ))}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                    {builds.length > COLLAPSED_BUILDS && (
+                        <button
+                            type="button"
+                            className="show-all"
+                            onClick={() => setShowAllBuilds(!showAllBuilds)}
+                        >
+                            {showAllBuilds ? 'Show fewer' : `Show all ${builds.length} builds`}
+                        </button>
+                    )}
+                </section>
+            )}
+
+            {activeTab === 'items' && (
+                <section className="hero-card">
+                    <h2>Items</h2>
+                    <p className="subtitle">
+                        Item win rates are correlational: players who are ahead buy items sooner and win more.
+                    </p>
+                    {hasPhases && (
+                        <div className="rank-chips" role="group" aria-label="Game phase">
+                            <span className="rank-label">First bought</span>
+                            {VIEWS.map((option) => (
+                                <button
+                                    key={option.key}
+                                    type="button"
+                                    className={option.key === activeView ? 'rank-chip active' : 'rank-chip'}
+                                    aria-pressed={option.key === activeView}
+                                    onClick={() => setView(option.key)}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {activeView !== 'ALL' && (
+                        <p className="subtitle">
+                            Items grouped by when players first bought them. Buy rate is the share of this hero's
+                            players who first bought the item in that phase.
+                        </p>
+                    )}
+                    <ItemsTable key={`${activeView}-${minTier}`} rows={rows} showMedian={activeView === 'ALL'} />
+                </section>
+            )}
         </main>
     )
 }
