@@ -58,7 +58,8 @@ public abstract class IntegrationTestBase {
      */
     protected void resetDatabase() {
         jdbc.execute("TRUNCATE item_purchases, match_players, matches, tier_match_totals, hero_tier_stats, "
-                + "hero_daily_stats, item_tier_stats, build_tier_stats, stats_refresh, processed_files");
+                + "hero_daily_stats, item_tier_stats, item_phase_stats, build_tier_stats, stats_refresh, "
+                + "processed_files");
         statsCache.evictAll();
     }
 

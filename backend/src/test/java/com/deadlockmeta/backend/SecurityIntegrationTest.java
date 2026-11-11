@@ -1,15 +1,16 @@
 package com.deadlockmeta.backend;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import java.util.Map;
-import org.springframework.core.ParameterizedTypeReference;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
-import org.junit.jupiter.api.BeforeEach;
 
 class SecurityIntegrationTest extends IntegrationTestBase {
 
@@ -91,5 +92,17 @@ class SecurityIntegrationTest extends IntegrationTestBase {
     void invalidMinTierOnDailyReturns400() {
         assertThrows(HttpClientErrorException.BadRequest.class,
                 () -> api().get().uri("/api/heroes/1/daily?minTier=50").retrieve().toBodilessEntity());
+    }
+
+    @Test
+    void unknownHeroOnItemPhasesReturns404() {
+        assertThrows(HttpClientErrorException.NotFound.class,
+                () -> api().get().uri("/api/heroes/999999/items/phases").retrieve().toBodilessEntity());
+    }
+
+    @Test
+    void invalidMinTierOnItemPhasesReturns400() {
+        assertThrows(HttpClientErrorException.BadRequest.class,
+                () -> api().get().uri("/api/heroes/1/items/phases?minTier=50").retrieve().toBodilessEntity());
     }
 }

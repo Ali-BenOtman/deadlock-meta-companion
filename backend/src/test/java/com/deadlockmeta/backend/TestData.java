@@ -11,8 +11,8 @@ import java.sql.Statement;
  * outcomes.
  * Each match has 12 players: heroes 1-6 on Team0 (always win), heroes 7-12 on
  * Team1 (always lose).
- * Every player buys items 1-6 at 60, 120, ... 360 seconds. Matches start one
- * hour apart.
+ * Every player buys items 1-6 at 60, 120, ... 360 seconds, plus an optional
+ * shift. Matches start one hour apart.
  */
 public final class TestData {
 
@@ -31,7 +31,7 @@ public final class TestData {
                        p.slot < 6 AS won,
                        TIMESTAMP '%s' AS created_at,
                        [1, 2, 3, 4, 5, 6] AS "items.item_id",
-                       [60, 120, 180, 240, 300, 360] AS "items.game_time_s",
+                       [60 + %d, 120 + %d, 180 + %d, 240 + %d, 300 + %d, 360 + %d] AS "items.game_time_s",
                        [0, 0, 0, 0, 0, 0] AS "items.sold_time_s"
                 FROM (SELECT range AS n, %d + range AS match_id FROM range(%d)) m
                 CROSS JOIN (SELECT range AS slot FROM range(12)) p
@@ -43,10 +43,20 @@ public final class TestData {
 
     public static String writeMatches(Path dir, String fileName, long firstMatchId, int matches,
             String firstStart, int averageBadge) throws SQLException {
+        return writeMatches(dir, fileName, firstMatchId, matches, firstStart, averageBadge, 0);
+    }
+
+    /**
+     * Same as above, but every purchase time is shifted by itemTimeOffsetS seconds.
+     */
+    public static String writeMatches(Path dir, String fileName, long firstMatchId, int matches,
+            String firstStart, int averageBadge, int itemTimeOffsetS) throws SQLException {
         String path = dir.resolve(fileName).toAbsolutePath().toString().replace('\\', '/');
+        int s = itemTimeOffsetS;
         try (Connection duck = DriverManager.getConnection("jdbc:duckdb:");
                 Statement statement = duck.createStatement()) {
-            statement.execute(MATCHES_SQL.formatted(firstStart, averageBadge, firstStart, firstMatchId, matches, path));
+            statement.execute(MATCHES_SQL.formatted(firstStart, averageBadge, firstStart,
+                    s, s, s, s, s, s, firstMatchId, matches, path));
         }
         return path;
     }

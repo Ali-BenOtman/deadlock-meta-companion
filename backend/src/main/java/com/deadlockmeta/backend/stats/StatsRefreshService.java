@@ -78,6 +78,24 @@ public class StatsRefreshService {
                         GROUP BY wp.hero_id, fb.item_id, wp.tier
                         """;
 
+        // The same first purchases, split by game phase: 1 = before 10:00, 2 = from
+        // 10:00
+        // to 19:59, 3 = from 20:00. The cut points live only here; changing them takes
+        // effect at the next refresh. GROUP BY uses positions to avoid any ambiguity
+        // with the phase expression.
+        private static final String INSERT_ITEM_PHASE_STATS = """
+                        INSERT INTO item_phase_stats (hero_id, item_id, tier, phase, buyers, wins)
+                        SELECT wp.hero_id, fb.item_id, wp.tier,
+                               CASE WHEN fb.first_buy_s < 600 THEN 1
+                                    WHEN fb.first_buy_s < 1200 THEN 2
+                                    ELSE 3 END,
+                               COUNT(*),
+                               SUM(CASE WHEN wp.won THEN 1 ELSE 0 END)
+                        FROM window_first_buys fb
+                        JOIN window_players wp ON wp.match_id = fb.match_id AND wp.account_id = fb.account_id
+                        GROUP BY 1, 2, 3, 4
+                        """;
+
         private static final String INSERT_BUILD_STATS = """
                         WITH ordered_buys AS (
                             SELECT match_id, account_id, item_id,
@@ -141,12 +159,14 @@ public class StatsRefreshService {
                 jdbcTemplate.update("DELETE FROM hero_tier_stats");
                 jdbcTemplate.update("DELETE FROM hero_daily_stats");
                 jdbcTemplate.update("DELETE FROM item_tier_stats");
+                jdbcTemplate.update("DELETE FROM item_phase_stats");
                 jdbcTemplate.update("DELETE FROM build_tier_stats");
 
                 step("Tier totals", INSERT_TIER_TOTALS);
                 int heroRows = step("Hero stats", INSERT_HERO_STATS);
                 step("Hero daily stats", INSERT_HERO_DAILY_STATS);
                 int itemRows = step("Item stats", INSERT_ITEM_STATS);
+                step("Item phase stats", INSERT_ITEM_PHASE_STATS);
                 int buildRows = step("Build stats", INSERT_BUILD_STATS);
 
                 long durationMs = (System.nanoTime() - startedAt) / 1_000_000;

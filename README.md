@@ -60,7 +60,7 @@ These are numbers I measured while building it, not estimates. Details are in [`
 | Ingestion speed | | about 5,600 rows per second with batched inserts |
 | Full data update on the server | | about 8 to 24 minutes, varying with the shared CPU and growing with the data |
 | Database backup and restore | | 18 GB database dumps to about 980 MB in about 4 minutes; a test restore took under 16 minutes |
-| Backend test suite | | 30 tests in about 25 seconds |
+| Backend test suite | | 34 tests in about 36 seconds |
 
 ## Key design decisions
 
@@ -84,6 +84,7 @@ All endpoints are `GET`, read-only and need no authentication. `minTier` is a ra
 | `/api/meta?minTier=` | Every hero with tier, smoothed and raw win rate, pick rate, games, weekly trend and image |
 | `/api/heroes/stats?minTier=` | Per-hero stats |
 | `/api/heroes/{id}/items?minTier=` | Items for a hero: buyers, buy rate, win rate, difference from the hero average, median buy time |
+| `/api/heroes/{id}/items/phases?minTier=` | The same item stats split by when players first bought the item: early (before 10:00), mid (10:00 to 19:59) or late (from 20:00) |
 | `/api/heroes/{id}/builds?minTier=` | The most-played first six items (at least 30 games) with win rate |
 | `/api/status?minTier=` | When the statistics were last refreshed, the period they cover and how many matches they are based on |
 | `/api/heroes/{id}/daily?minTier=` | One row per day in the statistics window for a hero: games, wins and win rate |
@@ -102,7 +103,7 @@ An invalid `minTier` returns 400, and an unknown hero returns 404 before the cac
 
 ## Testing and CI
 
-- 30 tests: 9 unit tests for the tier and trend rules, and 21 integration tests that start real PostgreSQL 17 and Redis 7.4 containers with Testcontainers. Flyway builds the schema from scratch on every run, and test data is generated with DuckDB with known outcomes, so expected values can be worked out by hand.
+- 34 tests: 9 unit tests for the tier and trend rules, and 25 integration tests that start real PostgreSQL 17 and Redis 7.4 containers with Testcontainers. Flyway builds the schema from scratch on every run, and test data is generated with DuckDB with known outcomes, so expected values can be worked out by hand.
 - GitHub Actions runs the backend tests and a Docker build, and a separate frontend job runs lint and the production build. Both are required checks on `main`, and Dependabot keeps Maven, Docker, Actions and npm up to date.
 
 ## Run it locally
