@@ -1015,3 +1015,42 @@
 .hero-card .qa-tile {
   background: var(--bg);
 }
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--muted);
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+:root[data-theme='light'] .nav-links a.active,
+:root[data-theme='light'] .eyebrow,
+:root[data-theme='light'] .preview-link,
+:root[data-theme='light'] .rank-option[aria-selected='true'],
+:root[data-theme='light'] .sort-button.active {
+  color: var(--accent-text);
+}
+
+:root[data-theme='light'] .trend-rising {
+  color: var(--up);
+}
+
+:root[data-theme='light'] .trend-falling {
+  color: var(--down);
+}

@@ -64,3 +64,16 @@ p {
 a {
   color: inherit;
 }
+
+:root[data-theme='light'] {
+  --bg: #f4f3ee;
+  --surface: #ffffff;
+  --border: #d8d5ca;
+  --text: #1c1e23;
+  --muted: #5b616c;
+  --accent: #c77700;
+  --accent-text: #9a5b00;
+  --up: #1a7f37;
+  --down: #cf222e;
+  color-scheme: light;
+}

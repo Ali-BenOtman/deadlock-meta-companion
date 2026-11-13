@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router-dom'
 import Logo from './Logo'
+import ThemeToggle from './ThemeToggle'
 
 export default function Nav() {
     return (
@@ -14,6 +15,7 @@ export default function Nav() {
                 </NavLink>
                 <NavLink to="/tier-list">Tier list</NavLink>
                 <Link to={{ pathname: '/', hash: '#about' }}>About the data</Link>
+                <ThemeToggle />
             </div>
         </nav>
     )
