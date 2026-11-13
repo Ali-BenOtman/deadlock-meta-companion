@@ -141,6 +141,7 @@ cd backend
 ## Deployment
 
 The backend runs as four containers (PostgreSQL, Redis, the Spring Boot app and Caddy) with Docker Compose on a single VPS, with memory limits per container. The frontend is a static build on Vercel and redeploys on every merge to `main`. Backend deploys are manual: pull, rebuild the backend container, recreate Redis. An external monitor checks `/actuator/health`. A nightly backup keeps the newest three database dumps on the server; see [`docs/backup.md`](docs/backup.md).
+ Visits are counted with Vercel Web Analytics, which Vercel documents as cookie-free; ad blockers hide some visitors, so the counts are a lower bound (decision 38).
 
 ## Limitations
 

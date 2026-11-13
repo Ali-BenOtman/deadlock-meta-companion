@@ -59,6 +59,10 @@ const LIMITS = [
         title: 'Small samples are smoothed',
         text: 'Win rates are pulled toward 50% for heroes with few games, so tiers do not swing on a lucky streak.',
     },
+    {
+        title: 'How visits are counted',
+        text: 'This site counts visits with Vercel Web Analytics. Vercel documents it as cookie-free and anonymised: visitors are told apart by a hash that is reset every day, so nobody can be followed between days or sites. I only see totals, such as page views and pages, not individuals.',
+    },
 ]
 
 export default function LandingPage() {
