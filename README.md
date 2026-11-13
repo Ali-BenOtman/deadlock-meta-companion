@@ -15,6 +15,7 @@ I built this to learn how to run a small, data-heavy backend end to end: pulling
 - **Hero pages.** A stats strip (tier, win rate, pick rate, games, wins and losses) and four tabs: quick answers (a core build in buying order and the most-bought items for the early, mid and late game), the daily win rate chart, the most-played starting builds, and a sortable items table with the win rate against the hero's own average, the buy rate and the number of buyers. The items can be split by when players first bought them: early (0 to 10 minutes), mid (10 to 20) or late (20 and later).
 - **Rank filter.** Every number can be limited to a minimum rank, from Obscurus to Eternus (lowest to highest rank).
 - **Automatic updates.** New ranked matches are collected every three hours and every statistic is recalculated.
+- **Light and dark theme.** A toggle in the navigation switches between a dark and a light theme; the first visit follows the visitor's system setting and the choice is remembered.
 
 ## Screenshots
 
