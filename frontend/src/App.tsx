@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes, useParams } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
+import FeedbackPage from './FeedbackPage'
 import HeroPage from './HeroPage'
 import LandingPage from './LandingPage'
 import Nav from './Nav'
@@ -23,6 +24,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/tier-list" element={<TierListPage />} />
         <Route path="/hero/:heroId" element={<HeroRoute />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
       </Routes>
       <Analytics />
     </BrowserRouter>

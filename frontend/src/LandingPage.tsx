@@ -63,6 +63,10 @@ const LIMITS = [
         title: 'How visits are counted',
         text: 'This site counts visits with Vercel Web Analytics. Vercel documents it as cookie-free and anonymised: visitors are told apart by a hash that is reset every day, so nobody can be followed between days or sites. I only see totals, such as page views and pages, not individuals.',
     },
+    {
+        title: 'Feedback you send',
+        text: 'Feedback is stored as the message and the optional rating only, with no address or other personal data, and only I can read it. It is included in the database backups.',
+    },
 ]
 
 export default function LandingPage() {
