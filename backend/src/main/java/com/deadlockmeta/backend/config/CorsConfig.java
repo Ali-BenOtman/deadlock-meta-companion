@@ -19,6 +19,14 @@ public class CorsConfig implements WebMvcConfigurer {
         if (allowedOrigins.length == 0) {
             return;
         }
+        // The feedback form is the only place the site sends data, so it is the only
+        // POST allowed.
+        // It is registered first so it wins over the general rule below.
+        registry.addMapping("/api/feedback")
+                .allowedOrigins(allowedOrigins)
+                .allowedMethods("POST")
+                .allowedHeaders("Content-Type")
+                .maxAge(3600);
         registry.addMapping("/api/**")
                 .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET")

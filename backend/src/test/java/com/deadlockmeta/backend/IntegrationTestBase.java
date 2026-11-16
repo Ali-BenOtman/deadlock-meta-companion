@@ -1,9 +1,12 @@
 package com.deadlockmeta.backend;
 
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -45,6 +48,9 @@ public abstract class IntegrationTestBase {
     @Autowired
     private StatsCache statsCache;
 
+    @Autowired
+    private StringRedisTemplate stringRedis;
+
     @Value("${local.server.port}")
     private int port;
 
@@ -53,14 +59,19 @@ public abstract class IntegrationTestBase {
     }
 
     /**
-     * Empties every table and the stats cache, so each test starts from a known
-     * state.
+     * Empties every table, the stats cache and the feedback limits, so each test
+     * starts from a
+     * known state.
      */
     protected void resetDatabase() {
         jdbc.execute("TRUNCATE item_purchases, match_players, matches, tier_match_totals, hero_tier_stats, "
                 + "hero_daily_stats, item_tier_stats, item_phase_stats, build_tier_stats, stats_refresh, "
-                + "processed_files");
+                + "processed_files, feedback");
         statsCache.evictAll();
+        Set<String> limits = stringRedis.keys("feedback:*");
+        if (limits != null && !limits.isEmpty()) {
+            stringRedis.delete(limits);
+        }
     }
 
     protected long count(String table) {
