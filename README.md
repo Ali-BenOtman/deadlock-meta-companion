@@ -16,6 +16,7 @@ I built this to learn how to run a small, data-heavy backend end to end: pulling
 - **Rank filter.** Every number can be limited to a minimum rank, from Obscurus to Eternus (lowest to highest rank).
 - **Automatic updates.** New ranked matches are collected every three hours and every statistic is recalculated.
 - **Light and dark theme.** A toggle in the navigation switches between a dark and a light theme; the first visit follows the visitor's system setting and the choice is remembered.
+- **Feedback.** A form where visitors send a message and an optional rating. Messages are private and stored without any address or personal data; I read them with a script on the server.
 
 ## Screenshots
 
@@ -59,7 +60,7 @@ These are numbers I measured while building it, not estimates. Details are in [`
 | Stats refresh, laptop (shared window tables) | 328 s | 164 s, identical results |
 | Database size after the first retention run | 15 GB | 8.2 GB (deleted 140,304 old matches in 51 s, then `VACUUM FULL`) |
 | Ingestion speed | | about 5,600 rows per second with batched inserts |
-| Full data update on the server | | about 17 to 34 minutes, varying with the shared CPU and growing with the data |
+| Full data update on the server | | about 17 to 39 minutes, varying with the shared CPU and growing with the data |
 | Database backup and restore | | 18 GB database dumps to about 980 MB in about 4 minutes; a test restore took under 16 minutes |
 | Backend test suite | | 46 tests in about 37 seconds |
 

@@ -15,6 +15,7 @@ export default function Nav() {
                 </NavLink>
                 <NavLink to="/tier-list">Tier list</NavLink>
                 <Link to={{ pathname: '/', hash: '#about' }}>About the data</Link>
+                <NavLink to="/feedback">Feedback</NavLink>
                 <ThemeToggle />
             </div>
         </nav>
