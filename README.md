@@ -46,7 +46,7 @@ flowchart TD
 4. **Serve.** A Spring Boot API reads the summary tables, with Redis in front. The cache is cleared only after a refresh has committed.
 5. **Display.** A React single-page app on Vercel calls the API.
 
-Data is kept for 21 days, and statistics use the 14 days before the newest match, which is roughly 360,000 ranked matches at the time of writing.
+Data is kept for 21 days, and statistics use the 14 days before the newest match, which was about 460,000 ranked matches on 16 November 2026
 
 ## Measured results
 
@@ -61,7 +61,7 @@ These are numbers I measured while building it, not estimates. Details are in [`
 | Database size after the first retention run | 15 GB | 8.2 GB (deleted 140,304 old matches in 51 s, then `VACUUM FULL`) |
 | Ingestion speed | | about 5,600 rows per second with batched inserts |
 | Full data update on the server | | about 17 to 39 minutes, varying with the shared CPU and growing with the data |
-| Database backup and restore | | 18 GB database dumps to about 980 MB in about 4 minutes; a test restore took under 16 minutes |
+| Database backup and restore | | nightly dump of the database (24 GB on 16 November 2026) to about 1.2 GB in about 5 minutes; a test restore on 5 November took under 16 minutes |
 | Backend test suite | | 46 tests in about 37 seconds |
 
 ## Key design decisions
