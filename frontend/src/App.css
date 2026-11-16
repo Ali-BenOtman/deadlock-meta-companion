@@ -1054,3 +1054,87 @@
 :root[data-theme='light'] .trend-falling {
   color: var(--down);
 }
+
+.feedback-wrap {
+  max-width: 640px;
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.feedback-rating {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.feedback-rating legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-weight: 600;
+}
+
+.feedback-optional {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.feedback-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.feedback-textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.feedback-textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.feedback-hint,
+.feedback-count {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.feedback-count {
+  margin-top: 4px;
+  text-align: right;
+}
+
+.feedback-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.feedback-error {
+  margin: 0;
+  color: var(--down);
+}
+
+.feedback-done {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
