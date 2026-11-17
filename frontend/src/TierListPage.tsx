@@ -104,35 +104,27 @@ function TierRows({ minTier, q, sort }: { minTier: number; q: string; sort: Sort
 
       {visible.length === 0 && <p className="status">No heroes match "{q}".</p>}
 
-      {sort === 'tier' ? (
-        TIER_ORDER.map((tier) => {
-          const inTier = visible.filter((hero) => hero.tier === tier)
-          if (inTier.length === 0) return null
-          return (
-            <section key={tier} className="tier-row">
-              <div className={`tier-label tier-${tier}`}>{tierLabel(tier)}</div>
-              <div className="tier-heroes">
-                {inTier.map((hero) => (
-                  <HeroTile key={hero.heroId} hero={hero} />
-                ))}
-              </div>
-            </section>
-          )
-        })
-      ) : (
-        visible.length > 0 && (
-          <>
-            <p className="tier-note">Sorted by {sortLabel.toLowerCase()}</p>
-            <div className="tier-heroes tier-flat">
-              {sortHeroes(visible, sort).map((hero) => (
+      {sort !== 'tier' && visible.length > 0 && (
+        <p className="tier-note">Sorted by {sortLabel.toLowerCase()} within each tier</p>
+      )}
+
+      {TIER_ORDER.map((tier) => {
+        const inTierAll = visible.filter((hero) => hero.tier === tier)
+        if (inTierAll.length === 0) return null
+        const inTier = sort === 'tier' ? inTierAll : sortHeroes(inTierAll, sort)
+        return (
+          <section key={tier} className="tier-row">
+            <div className={`tier-label tier-${tier}`}>{tierLabel(tier)}</div>
+            <div className="tier-heroes">
+              {inTier.map((hero) => (
                 <HeroTile key={hero.heroId} hero={hero} />
               ))}
             </div>
-          </>
+          </section>
         )
-      )}
+      })}
 
-      {hasUnranked && sort === 'tier' && (
+      {hasUnranked && (
         <p className="tier-note">Heroes marked ? have fewer than 500 games at this rank, so they have no tier.</p>
       )}
     </>
